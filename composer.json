@@ -1,0 +1,14 @@
+{
+  "name": "dengsn/gallerie",
+  "description": "Art hosting backend for PHP",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": ">=5.6",
+    "silex/silex": "~2.0",
+    "sergeytsalkov/meekrodb": "*"
+  },
+  "autoload": {
+    "psr-4": {"Gallerie\\": "classes/"}
+  }
+}
