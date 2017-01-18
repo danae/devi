@@ -2,11 +2,13 @@
 require "vendor/autoload.php";
 
 use Gallerie\Application\ApplicationException;
-use Gallerie\Application\Art\ArtControllerProvider;
-use Gallerie\Application\User\UserControllerProvider;
+use Gallerie\Application\ArtControllerProvider;
+use Gallerie\Application\UserControllerProvider;
 use Gallerie\Authorization\Authorization;
+use Gallerie\Implementations\MeekroDB\ArtRepository;
+use Gallerie\Implementations\MeekroDB\UserRepository;
 use Silex\Application;
-use Silex\Provider\ServiceControllerServiceProvider;
+use Silex\Provider\SessionServiceProvider;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -37,14 +39,18 @@ $app['database']->throw_exception_on_error = true;
 $app['database']->throw_exception_on_nonsql_error = true;
 
 // Create authorization middleware
-$app['authorization'] = function() {
-  return new Authorization;
-};
+$app['authorization'] = new Authorization;
+
+// Create the repositories and providers
+$app['users.repository'] = new UserRepository($app['database'],'users');
+$app['users.provider'] = new UserControllerProvider($app['users.repository']);
+
+$app['arts.repository'] = new ArtRepository($app['database'],'art');
+$app['arts.provider'] = new ArtControllerProvider($app['arts.repository']);
 
 // Create the controllers
-$app->register(new ServiceControllerServiceProvider);
-$app->mount('/',new UserControllerProvider);
-$app->mount('/',new ArtControllerProvider);
+$app->mount('/',$app['users.provider']);
+$app->mount('/',$app['arts.provider']);
 
 // Run the application
 $app->run();

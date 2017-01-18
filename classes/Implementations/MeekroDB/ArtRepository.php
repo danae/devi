@@ -1,11 +1,13 @@
 <?php
-namespace Gallerie\Art;
+namespace Gallerie\Implementations\MeekroDB;
 
 use DateTime;
-use Gallerie\User\User;
+use Gallerie\Model\Art;
+use Gallerie\Model\ArtRepositoryInterface;
+use Gallerie\Model\User;
 use MeekroDB;
 
-class ArtRepository
+class ArtRepository implements ArtRepositoryInterface
 {
   // Variables
   private $database;
@@ -54,17 +56,17 @@ class ArtRepository
     ];
   }
   
-  // Get art by name
-  public function getByName($name)
-  {
-    $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE name = %s",$name);
-    return $this->fromArray($result);
-  }
-  
   // Get art from the repository
   public function get($id)
   {
     $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE id = %i",$id);
+    return $this->fromArray($result);
+  }
+  
+  // Get art by name
+  public function getByName($name)
+  {
+    $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE name = %s",$name);
     return $this->fromArray($result);
   }
   

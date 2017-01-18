@@ -1,10 +1,12 @@
 <?php
-namespace Gallerie\User;
+namespace Gallerie\Implementations\MeekroDB;
 
 use DateTime;
+use Gallerie\Model\User;
+use Gallerie\Model\UserRepositoryInterface;
 use MeekroDB;
 
-class UserRepository
+class UserRepository implements UserRepositoryInterface
 {
   // Variables
   private $database;

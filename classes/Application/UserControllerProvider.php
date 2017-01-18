@@ -1,20 +1,21 @@
 <?php
-namespace Gallerie\Application\User;
+namespace Gallerie\Application;
 
 use DateTime;
-use Gallerie\Application\ApplicationException;
-use Gallerie\User\User;
-use Gallerie\User\UserRepository;
+use Gallerie\Model\User;
+use Gallerie\Model\UserRepositoryInterface;
+use Silex\Api\ControllerProviderInterface;
+use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
-class UserController
+class UserControllerProvider implements ControllerProviderInterface
 {
   // Variables
   private $repo;
   
   // Constructor
-  public function __construct(UserRepository $repo)
+  public function __construct(UserRepositoryInterface $repo)
   {
     $this->repo = $repo;
   }
@@ -135,5 +136,37 @@ class UserController
       return new JsonResponse($app['arts.repository']->getAllByUser($user));
     else
       return new JsonResponse($app['arts.repository']->getAllPublicByUser($user));
+  }
+  
+  // Connect to the application
+  public function connect(Application $app)
+  {
+    // Create user controller
+    $app['users.controller'] = $this;
+    
+    // Create controllers
+    $controllers = $app['controllers_factory']
+      ->convert('user',[$this->repo,'getByName']);
+
+    // Create user routes
+    $controllers
+      ->post('/users',[$this,'post']);
+    $controllers
+      ->get('/users/{user}',[$this,'get'])
+      ->before('authorization:optional');
+    $controllers
+      ->patch('/users/{user}',[$this,'patch'])
+      ->before('authorization:authorize');
+    $controllers
+      ->delete('/users/{user}',[$this,'delete'])
+      ->before('authorization:authorize');
+    
+    // Create user art routes
+    $controllers
+      ->get('/users/{user}/arts',[$this,'getAllArts'])
+      ->before('authorization:optional');
+    
+    // Return the controllers
+    return $controllers;
   }
 }

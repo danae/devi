@@ -1,22 +1,23 @@
 <?php
-namespace Gallerie\Application\Art;
+namespace Gallerie\Application;
 
 use DateTime;
-use Gallerie\Application\ApplicationException;
-use Gallerie\Art\Art;
-use Gallerie\Art\ArtRepository;
-use Gallerie\User\User;
+use Gallerie\Model\Art;
+use Gallerie\Model\ArtRepositoryInterface;
+use Gallerie\Model\User;
+use Silex\Api\ControllerProviderInterface;
+use Silex\Application;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
-class ArtController
+class ArtControllerProvider implements ControllerProviderInterface
 {
   // Variables
   private $repo;
   
   // Constructor
-  public function __construct(ArtRepository $repo)
+  public function __construct(ArtRepositoryInterface $repo)
   {
     $this->repo = $repo;
   }
@@ -70,7 +71,7 @@ class ArtController
     return new JsonResponse($art);
   }
 
-  // PATCH: Update existing art
+  // Update existing art
   public function patch($art, Request $request)
   {
     // Validate the art
@@ -82,8 +83,6 @@ class ArtController
       $art->withFileName($request->request->get('file_name'));
     if ($request->request->has('public'))
       $art->withPublic($request->request->get('public'));
-    if ($request->request->has('nsfw'))
-      $art->withNSFW($request->request->get('nsfw'));
   
     // Patch the updated art in the database
     $this->repo->patch($art->withDateModified(new DateTime));
@@ -130,5 +129,38 @@ class ArtController
   {
     $this->validate($art);
     return $art->raw();
+  }
+  
+  // Connect to the application
+  public function connect(Application $app)
+  {    
+    // Create controllers
+    $controllers = $app['controllers_factory']
+      ->convert('art',[$this->repo,'getByName']);
+
+    // Create art routes
+    $controllers
+      ->post('/arts',[$this,'post'])
+      ->before('authorization:authorize');
+    $controllers
+      ->get('/arts/{art}',[$this,'get'])
+      ->before('authorization:optional');
+    $controllers
+      ->patch('/arts/{art}',[$this,'patch'])
+      ->before('authorization:authorize');
+    $controllers
+      ->delete('/arts/{art}',[$this,'delete'])
+      ->before('authorization:authorize');
+
+    // Create raw art routes
+    $controllers
+      ->post('/arts/{art}/raw',[$this,'postRaw'])
+      ->before('authorization:authorize');
+    $controllers
+      ->get('/arts/{art}/raw',[$this,'getRaw'])
+      ->before('authorization:optional');
+    
+    // Return the controllers
+    return $controllers;
   }
 }

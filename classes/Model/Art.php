@@ -1,8 +1,7 @@
 <?php
-namespace Gallerie\Art;
+namespace Gallerie\Model;
 
 use DateTime;
-use Gallerie\User\User;
 use JsonSerializable;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\File;
