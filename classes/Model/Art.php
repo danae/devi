@@ -150,7 +150,7 @@ class Art implements JsonSerializable
   public static function create(UploadedFile $file, User $user, $file_name = null)
   {
     // Generate an ID
-    $name = self::generateName();
+    $name = self::createName();
     
     // Upload the file
     $uploaded = self::upload($file,$name);
@@ -166,6 +166,33 @@ class Art implements JsonSerializable
       ->withDateCreated(new DateTime)
       ->withDateModified(new DateTime)
       ->withPublic(true);
+  }
+  
+  // Generate an art name
+  private static function createName($length = null)
+  {
+    global $app;
+    
+    // Create pattern
+    $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
+    
+    // Get already occupied names
+    $occupied = $app['database']->queryFirstColumn('SELECT name FROM art');
+    $occupied_order = ceil(log(count($occupied),36)) + 1;
+    
+    // Set length
+    if ($length == null)
+      $length = max([$occupied_order + 1,5]);
+    
+    // Generate a name
+    do {
+      $generated = '0';
+      for ($i = 1; $i < $length; $i ++)
+        $generated .= $pattern[mt_rand(0,strlen($pattern)-1)];
+    } while (in_array($generated,$occupied));
+    
+    // Return the generated name
+    return $generated;
   }
   
   // Replace art from a file
@@ -194,32 +221,5 @@ class Art implements JsonSerializable
       $compressed_buffer->fwrite($file_buffer->fread(1));
     
     return $uploaded_file;
-  }
-  
-  // Generate an art name
-  private static function generateName($length = null)
-  {
-    global $app;
-    
-    // Create pattern
-    $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
-    
-    // Get already occupied ids
-    $occupied = $app['database']->queryFirstColumn('SELECT name FROM art');
-    $occupied_order = ceil(log(count($occupied),36)) + 1;
-    
-    // Set length
-    if ($length == null)
-      $length = max([$occupied_order + 1,5]);
-    
-    // Generate an ID
-    do {
-      $generated = '0';
-      for ($i = 1; $i < $length; $i ++)
-        $generated .= $pattern[mt_rand(0,strlen($pattern)-1)];
-    } while (in_array($generated,$occupied));
-    
-    // Return the generated ID
-    return $generated;
   }
 }

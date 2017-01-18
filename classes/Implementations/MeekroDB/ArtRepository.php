@@ -88,6 +88,13 @@ class ArtRepository implements ArtRepositoryInterface
     $this->database->delete($this->table,'id = %d',$art->getId());
   }
   
+  // Get all art
+  public function getAll()
+  {
+    $results = $this->database->query("SELECT * from {$this->table} WHERE public = 1 ORDER BY date_modified DESC");
+    return array_map([$this,'fromArray'],$results);
+  }
+  
   // Get all art by user
   public function getAllByUser(User $user)
   {

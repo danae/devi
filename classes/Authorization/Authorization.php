@@ -2,8 +2,7 @@
 namespace Gallerie\Authorization;
 
 use DateTime;
-use Gallerie\User\User;
-use Gallerie\User\UserDatabase;
+use Gallerie\Model\User;
 use Symfony\Component\HttpFoundation\Request;
 
 class Authorization
@@ -11,6 +10,8 @@ class Authorization
   // Required authorization
   public function authorize(Request $request)
   {
+    global $app;
+    
     // Get the Authorization and Date headers
     $public_key = $request->getUser();
     $hash_request = $request->getPassword();
@@ -28,7 +29,7 @@ class Authorization
       throw new AuthorizationException('The request was made more than 900 seconds in the past');
 
     // Check if the user is valid
-    $user = UserDatabase::getByPublicKey($public_key);
+    $user = $app['users.repository']->getByPublicKey($public_key);
     if ($user == null)
       throw new AuthorizationException('The request authorization is invalid');
     
@@ -39,7 +40,6 @@ class Authorization
 
     // All checks passed, so return the user
     $request->request->set('user',$user);
-    return $user;
   }
   
   // Authorize optional

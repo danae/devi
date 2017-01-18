@@ -9,6 +9,9 @@ interface UserRepositoryInterface
   // Get a user by name
   public function getByName($name);
   
+  // Get a user by public key
+  public function getByPublicKey($public_key);
+  
   // Put a user into the repository
   public function put(User $user);
   

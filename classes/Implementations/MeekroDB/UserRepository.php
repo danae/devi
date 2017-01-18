@@ -30,6 +30,8 @@ class UserRepository implements UserRepositoryInterface
       ->withName($array['name'])
       ->withEmail($array['email'])    
       ->withPassword($array['password'])
+      ->withPublicKey($array['public_key'])
+      ->withPrivateKey($array['private_key'])
       ->withDateCreated(new DateTime($array['date_created']))
       ->withDateModified(new DateTime($array['date_modified']));
   }
@@ -42,6 +44,8 @@ class UserRepository implements UserRepositoryInterface
       'name' => $user->getName(),
       'email' => $user->getEmail(),
       'password' => $user->getPassword(),
+      'public_key' => $user->getPublicKey(),
+      'private_key' => $user->getPrivateKey(),
       'date_created' => $user->getDateCreated(),
       'date_modified' => $user->getDateModified()
     ];
@@ -58,6 +62,13 @@ class UserRepository implements UserRepositoryInterface
   public function getByName($name)
   {
     $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE name = %s",$name);
+    return $this->fromArray($result);
+  }
+  
+  // Get a user by public key
+  public function getByPublicKey($public_key)
+  {
+    $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE public_key = %s",$public_key);
     return $this->fromArray($result);
   }
   

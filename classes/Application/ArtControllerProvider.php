@@ -131,6 +131,13 @@ class ArtControllerProvider implements ControllerProviderInterface
     return $art->raw();
   }
   
+  // Get all arts
+  public function getAll()
+  {
+    // Return the art
+    return new JsonResponse($this->repo->getAll());
+  }
+  
   // Connect to the application
   public function connect(Application $app)
   {    
@@ -139,6 +146,9 @@ class ArtControllerProvider implements ControllerProviderInterface
       ->convert('art',[$this->repo,'getByName']);
 
     // Create art routes
+    $controllers
+      ->get('/arts',[$this,'getAll'])
+      ->before('authorization:optional'); 
     $controllers
       ->post('/arts',[$this,'post'])
       ->before('authorization:authorize');

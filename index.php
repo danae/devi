@@ -8,7 +8,6 @@ use Gallerie\Authorization\Authorization;
 use Gallerie\Implementations\MeekroDB\ArtRepository;
 use Gallerie\Implementations\MeekroDB\UserRepository;
 use Silex\Application;
-use Silex\Provider\SessionServiceProvider;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 

@@ -18,6 +18,9 @@ interface ArtRepositoryInterface
   // Delete art from the repository
   public function delete(Art $art);
   
+  // Get all art
+  public function getAll();
+  
   // Get all art by user
   public function getAllByUser(User $user);
   
