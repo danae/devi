@@ -152,7 +152,7 @@ class ImageControllerProvider implements ControllerProviderInterface
     $this->validate($image);
     
     // Return the raw data
-    return $image->response();
+    return $image->response($this->storage);
   }
   
   // Connect to the application
