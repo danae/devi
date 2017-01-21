@@ -53,7 +53,14 @@ class UserControllerProvider implements ControllerProviderInterface
     }
   }
   
-  // POST: Create a new user
+  // Get all extisting users
+  public function getAll()
+  {
+    // Return all users
+    return new JsonResponse($this->repo->getAll());
+  }
+  
+  // Create a new user
   public function post(Request $request)
   {
     // Validate the parameters
@@ -68,7 +75,7 @@ class UserControllerProvider implements ControllerProviderInterface
     $user = User::create(
       $request->request->get('name'),
       $request->request->get('email'),
-      $request->request->get('password')
+      password_hash($request->request->get('password'),PASSWORD_BCRYPT)
     );
   
     // Put the user in the database
@@ -81,7 +88,10 @@ class UserControllerProvider implements ControllerProviderInterface
   // Get an existing user
   public function get($user)
   {
+    // Validate the user
     $this->validate($user);
+    
+    // Return the user
     return new JsonResponse($user);
   }
 
@@ -123,30 +133,32 @@ class UserControllerProvider implements ControllerProviderInterface
     return new JsonResponse($user);
   }
   
-  // Get all art of a user
-  public function getAllArts($user, Request $request)
+  // Get all images of a user
+  public function getAllImages($user, Request $request)
   {
     global $app;
     
     // Validate the user
     $this->validate($user);
     
-    // Return the art
+    // Return the images
     if ($this->checkCurrent($user,$request->request->get('user')))
-      return new JsonResponse($app['arts.repository']->getAllByUser($user));
+      return new JsonResponse($app['images.repository']->getAllByUser($user));
     else
-      return new JsonResponse($app['arts.repository']->getAllPublicByUser($user));
+      return new JsonResponse($app['images.repository']->getAllPublicByUser($user));
   }
   
   // Connect to the application
   public function connect(Application $app)
   {
-    // Create user controller
-    $app['users.controller'] = $this;
-    
     // Create controllers
     $controllers = $app['controllers_factory']
       ->convert('user',[$this->repo,'getByName']);
+    
+    // Create user collection routes
+    $controllers
+      ->get('/users',[$this,'getAll'])
+      ->before('authorization:optional');
 
     // Create user routes
     $controllers
@@ -161,9 +173,9 @@ class UserControllerProvider implements ControllerProviderInterface
       ->delete('/users/{user}',[$this,'delete'])
       ->before('authorization:authorize');
     
-    // Create user art routes
+    // Create user images routes
     $controllers
-      ->get('/users/{user}/arts',[$this,'getAllArts'])
+      ->get('/users/{user}/images',[$this,'getAllImages'])
       ->before('authorization:optional');
     
     // Return the controllers

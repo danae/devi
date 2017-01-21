@@ -6,6 +6,7 @@
   "require": {
     "php": ">=5.6",
     "silex/silex": "~2.0",
+    "jdesrosiers/silex-cors-provider": "~1.0",
     "sergeytsalkov/meekrodb": "*"
   },
   "autoload": {

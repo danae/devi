@@ -89,11 +89,22 @@ class User implements JsonSerializable
     $this->date_modified = $date_modified;
     return $this;
   }
+  
+  // Serialize to JSON
+  public function jsonSerialize()
+  {
+    return [
+      'name' => $this->getName(),
+      'email' => $this->getEmail(),
+      'date_created' => $this->getDateCreated()->format(DateTime::ISO8601),
+      'date_modified' => $this->getDateModified()->format(DateTime::ISO8601)
+    ];
+  }
 
   // Create a user
   public static function create($name, $email, $password)
   {
-    // Return the new art
+    // Return the new user
     return (new User)
       ->withName($name)
       ->withEmail($email)
@@ -116,16 +127,5 @@ class User implements JsonSerializable
     
     // Return the generated key
     return $generated;
-  }
-  
-  // Serialize to JSON
-  public function jsonSerialize()
-  {
-    return [
-      'name' => $this->getName(),
-      'email' => $this->getEmail(),
-      'date_created' => $this->getDateCreated()->format(DateTime::ISO8601),
-      'date_modified' => $this->getDateModified()->format(DateTime::ISO8601)
-    ];
   }
 }

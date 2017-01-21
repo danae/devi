@@ -1,0 +1,26 @@
+<?php
+// Create new application
+$app = new Silex\Application;
+
+// Database connection
+// Update these to your MySQL database settings
+$app['settings.db.server'] = 'localhost';
+$app['settings.db.user'] = 'user';
+$app['settings.db.password'] = 'password';
+$app['settings.db.database'] = 'database';
+
+// Upload storage path
+// Update this to the path relative to index.php where you want to store your
+// uploaded images, %s is replaced by the image name
+$app['settings.storage'] = 'store/%s.gz';
+
+// Supported MIME types
+$app['settings.mimetypes'] = [
+  'image/png' => 'png',
+  'image/jpeg' => 'jpg',
+  'image/gif' => 'gif',
+  'image/svg+xml' => 'svg'
+];
+
+// Return the application
+return $app;

@@ -1,9 +1,7 @@
 <?php
-namespace Gallerie\Implementations\MeekroDB;
+namespace Gallerie\Model;
 
 use DateTime;
-use Gallerie\Model\User;
-use Gallerie\Model\UserRepositoryInterface;
 use MeekroDB;
 
 class UserRepository implements UserRepositoryInterface
@@ -88,5 +86,12 @@ class UserRepository implements UserRepositoryInterface
   public function delete(User $user)
   {
     $this->database->delete($this->table,'id = %d',$user->getId());
+  }
+  
+  // Get all users
+  public function getAll()
+  {
+    $results = $this->database->query("SELECT * from {$this->table} ORDER BY date_created ASC");
+    return array_map([$this,'fromArray'],$results);
   }
 }

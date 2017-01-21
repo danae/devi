@@ -20,4 +20,7 @@ interface UserRepositoryInterface
   
   // Delete a user from the repository
   public function delete(User $user);
+  
+  // Get all users
+  public function getAll();
 }

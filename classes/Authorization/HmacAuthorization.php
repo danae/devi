@@ -5,7 +5,7 @@ use DateTime;
 use Gallerie\Model\User;
 use Symfony\Component\HttpFoundation\Request;
 
-class Authorization
+class HmacAuthorization
 {
   // Required authorization
   public function authorize(Request $request)

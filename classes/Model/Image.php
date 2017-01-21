@@ -2,20 +2,21 @@
 namespace Gallerie\Model;
 
 use DateTime;
+use Gallerie\Storage\StorageInterface;
+use Gallerie\Utils\Storage;
 use JsonSerializable;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
-class Art implements JsonSerializable
+class Image implements JsonSerializable
 {
   // Variables
   private $id;
   private $user_id;
   private $name;
   private $file_name;
-  private $file_location;
   private $file_mime_type;
   private $file_size;
   private $date_created;
@@ -57,15 +58,6 @@ class Art implements JsonSerializable
   public function withFileName($file_name)
   {
     $this->file_name = $file_name;
-    return $this;
-  }
-  public function getFileLocation()
-  {
-    return $this->file_location;
-  }
-  public function withFileLocation($file_location)
-  {
-    $this->file_location = $file_location;
     return $this;
   }
   public function getFileMimeType()
@@ -114,11 +106,24 @@ class Art implements JsonSerializable
     return $this;
   }
   
-  // Get the raw file data as a BinaryFileResponse
-  public function raw()
+  // Post the raw image from an uploaded file
+  public function upload(StorageInterface $storage, UploadedFile $file, $file_name = null)
+  {
+    // Upload the file
+    $storage->upload($this->name,$file);
+    
+    // Return the updated image
+    return $this
+      ->withFileName($file_name !== null ? $file_name : ($this->getFileName() !== null ? $this->getFileName() : $file->getClientOriginalName()))
+      ->withFileMimeType($file->getMimeType())
+      ->withFileSize($file->getSize());
+  }
+  
+  // Get the raw image as a BinaryFileResponse
+  public function response(StorageInterface $storage)
   {
     // Get the file location
-    $file = new File($this->getFileLocation(),false);
+    $file = $storage->get($this->getName());
   
     // Return the response
     $response = new BinaryFileResponse($file);
@@ -146,29 +151,19 @@ class Art implements JsonSerializable
     ];
   }
   
-  // Create art from a file
-  public static function create(UploadedFile $file, User $user, $file_name = null)
+  // Create an image from a file
+  public static function create(User $user)
   {
-    // Generate an ID
-    $name = self::createName();
-    
-    // Upload the file
-    $uploaded = self::upload($file,$name);
-
-    // Return the new art
-    return (new Art)
+    // Return the new image
+    return (new Image)
       ->withUserId($user->getId())
-      ->withName($name)
-      ->withFileName($file_name !== null ? $file_name : $file->getClientOriginalName())
-      ->withFileLocation($uploaded->getPathname())
-      ->withFileMimeType($file->getMimeType())
-      ->withFileSize($file->getSize())
+      ->withName(self::createName())
       ->withDateCreated(new DateTime)
       ->withDateModified(new DateTime)
       ->withPublic(true);
   }
   
-  // Generate an art name
+  // Generate an image name
   private static function createName($length = null)
   {
     global $app;
@@ -177,7 +172,7 @@ class Art implements JsonSerializable
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
     
     // Get already occupied names
-    $occupied = $app['database']->queryFirstColumn('SELECT name FROM art');
+    $occupied = $app['images.repository']->getAllNames();
     $occupied_order = ceil(log(count($occupied),36)) + 1;
     
     // Set length
@@ -193,33 +188,5 @@ class Art implements JsonSerializable
     
     // Return the generated name
     return $generated;
-  }
-  
-  // Replace art from a file
-  public function replace(UploadedFile $file, $file_name = null)
-  {
-    // Upload the file
-    self::upload($file,$this->name);
-    
-    // Return the updated art
-    return $this
-      ->withFileName($file_name !== null ? $file_name : $this->getFileName())
-      ->withFileMimeType($file->getMimeType())
-      ->withFileSize($file->getSize());
-  }
-  
-  // Upload a file to the art directory
-  private static function upload(File $file, $name)
-  {
-    $uploaded_file = new File('art/' . $name . '.gz',false);
-    $compressed_file = new File('compress.zlib://' . $uploaded_file->getPathname(),false);
-    
-    // Open and copy buffers
-    $file_buffer = $file->openFile('rb');
-    $compressed_buffer = $compressed_file->openFile('wb9');
-    while ($file_buffer->valid())
-      $compressed_buffer->fwrite($file_buffer->fread(1));
-    
-    return $uploaded_file;
   }
 }
