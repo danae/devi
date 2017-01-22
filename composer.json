@@ -7,6 +7,7 @@
       "email": "info@dengsn.com"
     }
   ],
+  "license": "GPL-3.0+",
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
