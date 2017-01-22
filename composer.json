@@ -1,6 +1,12 @@
 {
-  "name": "dengsn/gallerie",
-  "description": "Art hosting backend for PHP",
+  "name": "gallerie/gallerie",
+  "description": "Image hosting backend for PHP",
+  "authors": [
+    {
+      "name": "dengsn",
+      "email": "info@dengsn.com"
+    }
+  ],
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
