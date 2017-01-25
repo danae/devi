@@ -2,11 +2,8 @@
 namespace Gallerie\Model;
 
 use DateTime;
-use Gallerie\Storage\StorageInterface;
-use Gallerie\Utils\Storage;
 use JsonSerializable;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -14,7 +11,6 @@ class Image implements JsonSerializable
 {
   // Variables
   private $id;
-  private $user_id;
   private $name;
   private $file_name;
   private $file_mime_type;
@@ -22,6 +18,7 @@ class Image implements JsonSerializable
   private $date_created;
   private $date_modified;
   private $public;
+  private $user_id;
   
   // Management
   public function getId()
@@ -31,15 +28,6 @@ class Image implements JsonSerializable
   public function withId($id)
   {
     $this->id = $id;
-    return $this;
-  }
-  public function getUserId()
-  {
-    return $this->user_id;
-  }
-  public function withUserId($user_id)
-  {
-    $this->user_id = $user_id;
     return $this;
   }
   public function getName()
@@ -105,12 +93,21 @@ class Image implements JsonSerializable
     $this->public = $public;
     return $this;
   }
+  public function getUserId()
+  {
+    return $this->user_id;
+  }
+  public function withUserId($user_id)
+  {
+    $this->user_id = $user_id;
+    return $this;
+  }
   
   // Post the raw image from an uploaded file
-  public function upload(StorageInterface $storage, UploadedFile $file, $file_name = null)
+  public function upload(ImageStorageInterface $storage, UploadedFile $file, $file_name = null)
   {
     // Upload the file
-    $storage->upload($this->name,$file);
+    $storage->put($this->name,$file);
     
     // Return the updated image
     return $this
@@ -120,18 +117,25 @@ class Image implements JsonSerializable
   }
   
   // Get the raw image as a BinaryFileResponse
-  public function response(StorageInterface $storage)
+  public function response(ImageStorageInterface $storage)
   {
     // Get the file location
     $file = $storage->get($this->getName());
   
-    // Return the response
+    // Create the response
     $response = new BinaryFileResponse($file);
-    $response->headers->set('Content-Type',$this->getFileMimeType());
-    $response->headers->set('Content-Encoding','gzip');
     $response->setLastModified($this->getDateModified());
     $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE,$this->getFileName());
-    return $response; 
+    
+    // Set the correct content type
+    $response->headers->set('Content-Type',$this->getFileMimeType());
+    
+    // Set content encoding if this file is gzipped
+    if ($file->getMimeType() === 'application/x-gzip')
+      $response->headers->set('Content-Encoding','gzip');
+    
+    // Return the response
+    return $response;
   }
   
   // Serialize to JSON
@@ -140,18 +144,18 @@ class Image implements JsonSerializable
     global $app;
     
     return [
-      'user_name' => $app['users.repository']->get($this->getUserId())->getName(),
       'name' => $this->getName(),
       'file_name' => $this->getFileName(),
       'file_mime_type' => $this->getFileMimeType(),
       'file_size' => $this->getFileSize(),
       'date_created' => $this->getDateCreated()->format(DateTime::ISO8601),
       'date_modified' => $this->getDateModified()->format(DateTime::ISO8601),
-      'public' => $this->isPublic()
+      'public' => $this->isPublic(),
+      'user_name' => $app['users.repository']->get($this->getUserId())->getName()
     ];
   }
   
-  // Create an image from a file
+  // Create an image
   public static function create(User $user)
   {
     // Return the new image

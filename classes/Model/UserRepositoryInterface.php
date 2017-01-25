@@ -3,24 +3,24 @@ namespace Gallerie\Model;
 
 interface UserRepositoryInterface
 {
-  // Get a user from the repository
+  // Gets a user from the repository
   public function get($id);
   
-  // Get a user by name
+  // Gets a user by name
   public function getByName($name);
   
-  // Get a user by public key
+  // Gets a user by public key
   public function getByPublicKey($public_key);
   
-  // Put a user into the repository
+  // Puts a user into the repository
   public function put(User $user);
   
-  // Patch a user in the repository
+  // Patches a user in the repository
   public function patch(User $user);
   
-  // Delete a user from the repository
+  // Deletes a user from the repository
   public function delete(User $user);
   
-  // Get all users
+  // Gets all users
   public function getAll();
 }

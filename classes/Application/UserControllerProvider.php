@@ -31,7 +31,7 @@ class UserControllerProvider implements ControllerProviderInterface
   // Validate the current user
   public function validateCurrent(User $user, User $authorized)
   {
-    // Check if the user is the owner of the art
+    // Check if the user is the owner of the image
     if ($user->getId() !== $authorized->getId())
       throw new ApplicationException('The specified user cannot be changed by this user',403);
   }

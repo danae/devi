@@ -3,9 +3,9 @@ namespace Gallerie\Authorization;
 
 use Symfony\Component\HttpFoundation\Request;
 
-class BasicAuthorization
+class Authorization implements AuthorizationInterface
 {
-  // Required authorization
+  // Authorizes a request or throws an exception if failed
   public function authorize(Request $request)
   {
     global $app;
@@ -31,7 +31,7 @@ class BasicAuthorization
     $request->request->set('user',$user);
   }
   
-  // Authorize optional
+  // Optionally authorizes a request
   public function optional(Request $request)
   {
     try

@@ -1,10 +1,9 @@
 <?php
-namespace Gallerie\Storage;
+namespace Gallerie\Model;
 
 use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class Storage implements StorageInterface
+class ImageStorage implements ImageStorageInterface
 {
   // Variables
   private $location;
@@ -12,7 +11,6 @@ class Storage implements StorageInterface
   // Constructor
   public function __construct($location)
   {
-    // sprintf('%s/%s.gz',$app['settings.upload'],$name);
     $this->location = $location;
   }
   
@@ -27,20 +25,20 @@ class Storage implements StorageInterface
     return $this;
   }
   
-  // Return the file location for an id
+  // Returns the file location for an id
   public function locationFor($id)
   {
     return sprintf($this->getLocation(),$id);
   }
   
-  // Get a file from the storage
+  // Gets a file from the storage
   public function get($id)
   {
-    return new File($this->locationFor($id));
-  }
+    return new File($this->locationFor($id),false);
+  }  
   
-  // Upload a file to the storage
-  public function upload($id, UploadedFile $file)
+  // Puts a file into the storage
+  public function put($id, File $file)
   {
     // Create a new file to store the uploaded file in
     $uploaded_file = new File($this->locationFor($id),false);
@@ -56,7 +54,7 @@ class Storage implements StorageInterface
     return $uploaded_file;
   }
   
-  // Delete a file from the storage
+  // Deletes a file from the storage
   public function delete($id)
   {
     $location = $this->locationFor($id);

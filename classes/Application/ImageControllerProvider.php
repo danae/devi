@@ -4,7 +4,7 @@ namespace Gallerie\Application;
 use DateTime;
 use Gallerie\Model\Image;
 use Gallerie\Model\ImageRepositoryInterface;
-use Gallerie\Storage\StorageInterface;
+use Gallerie\Model\ImageStorageInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,7 +17,7 @@ class ImageControllerProvider implements ControllerProviderInterface
   private $storage;
   
   // Constructor
-  public function __construct(ImageRepositoryInterface $repo, StorageInterface $storage)
+  public function __construct(ImageRepositoryInterface $repo, ImageStorageInterface $storage)
   {
     $this->repo = $repo;
     $this->storage = $storage;
@@ -34,7 +34,7 @@ class ImageControllerProvider implements ControllerProviderInterface
   // Validate the owner of an image
   public function validateOwner(Image $image, $authorized)
   {
-    // Check if the user is the owner of the art
+    // Check if the user is the owner of the image
     if ($authorized === null)
       throw new ApplicationException('The specified image cannot be changed',403);
     if ($image->getUserId() !== $authorized->getId())
@@ -102,7 +102,7 @@ class ImageControllerProvider implements ControllerProviderInterface
     if ($request->request->has('public'))
       $image->withPublic((boolean)$request->request->get('public'));
   
-    // Patch the updated art in the database
+    // Patch the updated image in the database
     $this->repo->patch($image->withDateModified(new DateTime));
   
     // Return the image
@@ -165,7 +165,7 @@ class ImageControllerProvider implements ControllerProviderInterface
     // Create image collection routes
     $controllers
       ->get('/images',[$this,'getAll'])
-      ->before('authorization:optional'); 
+      ->before('authorization:optional');
 
     // Create image routes
     $controllers

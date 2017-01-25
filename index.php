@@ -4,10 +4,10 @@ require "vendor/autoload.php";
 use Gallerie\Application\ApplicationException;
 use Gallerie\Application\ImageControllerProvider;
 use Gallerie\Application\UserControllerProvider;
-use Gallerie\Authorization\BasicAuthorization;
+use Gallerie\Authorization\Authorization;
 use Gallerie\Model\ImageRepository;
+use Gallerie\Model\ImageStorage;
 use Gallerie\Model\UserRepository;
-use Gallerie\Storage\Storage;
 use JDesrosiers\Silex\Provider\CorsServiceProvider;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -46,9 +46,6 @@ $app->error(function(Exception $ex) {
 $app->register(new CorsServiceProvider);
 $app->after($app['cors']);
 
-// Create the storage backend
-$app['storage'] = new Storage($app['settings.storage']);
-
 // Create the database
 $app['database'] = new MeekroDB(
   $app['settings.db.server'],
@@ -60,7 +57,7 @@ $app['database']->throw_exception_on_nonsql_error = true;
 
 // Create authorization middleware
 $app['authorization'] = function() {
-  return new BasicAuthorization;
+  return new Authorization;
 };
 
 // Create the repositories and providers
@@ -70,16 +67,19 @@ $app['users.repository'] = function($app) {
 $app['users.provider'] = function($app) {
   return new UserControllerProvider($app['users.repository']);
 };
-$app['images.repository'] = function($app) {
-  return new ImageRepository($app['database'],'images');
+$app['arts.storage'] = function($app) {
+  return new ImageStorage($app['settings.storage']);
 };
-$app['images.provider'] = function($app) {
-  return new ImageControllerProvider($app['images.repository'],$app['storage']);
+$app['arts.repository'] = function($app) {
+  return new ImageRepository($app['database'],'arts',$app['arts.storage']);
+};
+$app['arts.provider'] = function($app) {
+  return new ImageControllerProvider($app['arts.repository'],$app['arts.storage']);
 };
 
 // Create the controllers
 $app->mount('/',$app['users.provider']);
-$app->mount('/',$app['images.provider']);
+$app->mount('/',$app['arts.provider']);
 
 // Run the application
 $app->run();

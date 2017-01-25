@@ -3,30 +3,30 @@ namespace Gallerie\Model;
 
 interface ImageRepositoryInterface
 {
-  // Get an image from the repository
+  // Gets an image from the repository
   public function get($id);
   
-  // Get an image by name
+  // Gets an image by name
   public function getByName($name);
   
-  // Put an image into the repository
-  public function put(Image $art);
+  // Puts an image into the repository
+  public function put(Image $image);
   
-  // Patch an image in the repository
-  public function patch(Image $art);
+  // Patches an image in the repository
+  public function patch(Image $image);
   
-  // Delete an image from the repository
-  public function delete(Image $art);
+  // Deletes an image from the repository
+  public function delete(Image $image);
   
-  // Get all images
+  // Gets all images
   public function getAll();
   
-  // Get all images by user
+  // Gets all images by user
   public function getAllByUser(User $user);
   
-  // Get all public images by user
+  // Gets all public images by user
   public function getAllPublicByUser(User $user);
   
-  // Get all names as an array
+  // Gets all names as an array
   public function getAllNames();
 }

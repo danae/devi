@@ -49,46 +49,46 @@ class UserRepository implements UserRepositoryInterface
     ];
   }
   
-  // Get a user from the repository
+  // Gets a user from the repository
   public function get($id)
   {
     $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE id = %i",$id);
     return $this->fromArray($result);
   }
   
-  // Get a user by name
+  // Gets a user by name
   public function getByName($name)
   {
     $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE name = %s",$name);
     return $this->fromArray($result);
   }
   
-  // Get a user by public key
+  // Gets a user by public key
   public function getByPublicKey($public_key)
   {
     $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE public_key = %s",$public_key);
     return $this->fromArray($result);
   }
   
-  // Put a user into the repository
+  // Puts a user into the repository
   public function put(User $user)
   {
     $this->database->insert($this->table,$this->toArray($user));
   }
   
-  // Patch a user in the repository
+  // Patches a user in the repository
   public function patch(User $user)
   {
     $this->database->update($this->table,$this->toArray($user->withDateModified(new DateTime)),'id = %d',$user->getId());
   }
   
-  // Delete a user from the repository
+  // Deletes a user from the repository
   public function delete(User $user)
   {
     $this->database->delete($this->table,'id = %d',$user->getId());
   }
   
-  // Get all users
+  // Gets all users
   public function getAll()
   {
     $results = $this->database->query("SELECT * from {$this->table} ORDER BY date_created ASC");

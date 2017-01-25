@@ -5,9 +5,9 @@ use DateTime;
 use Gallerie\Model\User;
 use Symfony\Component\HttpFoundation\Request;
 
-class HmacAuthorization
+class Authorization_Hmac implements AuthorizationInterface
 {
-  // Required authorization
+  // Authorizes a request or throws an exception if failed
   public function authorize(Request $request)
   {
     global $app;
@@ -42,7 +42,7 @@ class HmacAuthorization
     $request->request->set('user',$user);
   }
   
-  // Authorize optional
+  // Optionally authorizes a request
   public function optional(Request $request)
   {
     try
