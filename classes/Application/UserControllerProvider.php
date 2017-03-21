@@ -1,9 +1,9 @@
 <?php
-namespace Gallerie\Application;
+namespace Picturee\Application;
 
 use DateTime;
-use Gallerie\Model\User;
-use Gallerie\Model\UserRepositoryInterface;
+use Picturee\Model\User;
+use Picturee\Model\UserRepositoryInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -29,10 +29,10 @@ class UserControllerProvider implements ControllerProviderInterface
   }
   
   // Validate the current user
-  public function validateCurrent(User $user, User $authorized)
+  public function validateCurrent(User $user, Request $request)
   {
     // Check if the user is the owner of the image
-    if ($user->getId() !== $authorized->getId())
+    if ($user->getId() !== $request->request->get('user')->getId())
       throw new ApplicationException('The specified user cannot be changed by this user',403);
   }
   
@@ -100,7 +100,7 @@ class UserControllerProvider implements ControllerProviderInterface
   {
     // Validate the user
     $this->validate($user);
-    $this->validateCurrent($user,$request->request->get('user'));
+    $this->validateCurrent($user,$request);
 
     // Replace the fields
     if ($request->request->has('name'))
@@ -124,7 +124,7 @@ class UserControllerProvider implements ControllerProviderInterface
   {
     // Validate the user
     $this->validate($user);
-    $this->validateCurrent($user,$request->request->get('user'));
+    $this->validateCurrent($user,$request);
   
     // Delete the user
     $this->repo->delete($user);

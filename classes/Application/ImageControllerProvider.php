@@ -1,10 +1,10 @@
 <?php
-namespace Gallerie\Application;
+namespace Picturee\Application;
 
 use DateTime;
-use Gallerie\Model\Image;
-use Gallerie\Model\ImageRepositoryInterface;
-use Gallerie\Model\ImageStorageInterface;
+use Picturee\Model\Image;
+use Picturee\Model\ImageRepositoryInterface;
+use Picturee\Model\ImageStorageInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -103,7 +103,7 @@ class ImageControllerProvider implements ControllerProviderInterface
       $image->withPublic((boolean)$request->request->get('public'));
   
     // Patch the updated image in the database
-    $this->repo->patch($image->withDateModified(new DateTime));
+    $this->repo->patch($image);
   
     // Return the image
     return new JsonResponse($image);

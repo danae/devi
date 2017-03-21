@@ -1,5 +1,5 @@
 <?php
-namespace Gallerie\Model;
+namespace Picturee\Model;
 
 use Symfony\Component\HttpFoundation\File\File;
 

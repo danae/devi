@@ -10,5 +10,6 @@ composer.phar
 /nbproject/
 
 # Ignores for the project
+/cache/
 /store/
 /settings.php

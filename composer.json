@@ -1,5 +1,5 @@
 {
-  "name": "gallerie/gallerie",
+  "name": "picturee/picturee",
   "description": "Image hosting backend for PHP",
   "authors": [
     {
@@ -18,6 +18,6 @@
     "imagine/imagine": "~0.6"
   },
   "autoload": {
-    "psr-4": {"Gallerie\\": "classes/"}
+    "psr-4": {"Picturee\\": "classes/"}
   }
 }

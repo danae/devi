@@ -1,8 +1,8 @@
 <?php
-namespace Gallerie\Authorization;
+namespace Picturee\Authorization;
 
 use Exception;
-use Gallerie\Application\ApplicationException;
+use Picturee\Application\ApplicationException;
 
 class AuthorizationException extends ApplicationException
 {

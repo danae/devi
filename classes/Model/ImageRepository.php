@@ -1,7 +1,11 @@
 <?php
-namespace Gallerie\Model;
+namespace Picturee\Model;
 
 use DateTime;
+use Picturee\Hydrator\BooleanStrategy;
+use Picturee\Hydrator\DateTimeStrategy;
+use Picturee\Hydrator\Hydrator;
+use Picturee\Hydrator\IntegerStrategy;
 use MeekroDB;
 
 class ImageRepository implements ImageRepositoryInterface
@@ -10,6 +14,7 @@ class ImageRepository implements ImageRepositoryInterface
   private $database;
   private $table;
   private $storage;
+  private $hydrator;
   
   // Constructor
   public function __construct(MeekroDB $database, $table, ImageStorageInterface $storage)
@@ -17,66 +22,41 @@ class ImageRepository implements ImageRepositoryInterface
     $this->database = $database;
     $this->table = $table;
     $this->storage = $storage;
-  }
-  
-  // Convert an image from an associative array
-  private function fromArray($array)
-  {
-    if ($array == null)
-      return null;
-    
-    return (new Image)
-      ->withId((int)$array['id'])
-      ->withUserId((int)$array['user_id'])
-      ->withName($array['name'])
-      ->withFileName($array['file_name'])    
-      ->withFileMimeType($array['file_mime_type'])
-      ->withFileSize((int)$array['file_size'])
-      ->withDateCreated(new DateTime($array['date_created']))
-      ->withDateModified(new DateTime($array['date_modified']))
-      ->withPublic((bool)$array['public']);
-  }
-  
-  // Convert an image to an associative array
-  private function toArray(Image $image)
-  {
-    return [
-      'id' => $image->getId(),
-      'user_id' => $image->getUserId(),
-      'name' => $image->getName(),
-      'file_name' => $image->getFileName(),
-      'file_mime_type' => $image->getFileMimeType(),
-      'file_size' => $image->getFileSize(),
-      'date_created' => $image->getDateCreated(),
-      'date_modified' => $image->getDateModified(),
-      'public' => $image->isPublic()
-    ];
+    $this->hydrator = (new Hydrator)
+      ->withStrategy('id',new IntegerStrategy)
+      ->withStrategy('file_size',new IntegerStrategy)
+      ->withStrategy('date_created',new DateTimeStrategy)
+      ->withStrategy('date_modified',new DateTimeStrategy)
+      ->withStrategy('public',new BooleanStrategy)
+      ->withStrategy('user_id',new IntegerStrategy);
   }
   
   // Gets an image from the repository
   public function get($id)
   {
     $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE id = %i",$id);
-    return $this->fromArray($result);
+    return $this->hydrator->deserialize($result,new Image);
   }
   
   // Gets an image by name
   public function getByName($name)
   {
     $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE name = %s",$name);
-    return $this->fromArray($result);
+    return $this->hydrator->deserialize($result,new Image);
   }
   
   // Puts an image into the repository
   public function put(Image $image)
   {
-    $this->database->insert($this->table,$this->toArray($image));
+    $array = $this->hydrator->serialize($image);
+    $this->database->insert($this->table,$array);
   }
   
   // Patches an image in the repository
   public function patch(Image $image)
   {
-    $this->database->update($this->table,$this->toArray($image),'id = %d',$image->getId());
+    $array = $this->hydrator->serialize($image->withDateModified(new DateTime));
+    $this->database->update($this->table,$array,'id = %d',$image->getId());
   }
   
   // Deletes an image from the repository
@@ -89,21 +69,27 @@ class ImageRepository implements ImageRepositoryInterface
   public function getAll()
   {
     $results = $this->database->query("SELECT * from {$this->table} ORDER BY date_modified DESC");
-    return array_map([$this,'fromArray'],$results);
+    return array_map(function($result) {
+      return $this->hydrator->deserialize($result,new Image);
+    },$results);
   }
   
   // Gets all images by user
   public function getAllByUser(User $user)
   {
     $results = $this->database->query("SELECT * from {$this->table} WHERE user_id = %i ORDER BY date_modified DESC",$user->getId());
-    return array_map([$this,'fromArray'],$results);
+    return array_map(function($result) {
+      return $this->hydrator->deserialize($result,new Image);
+    },$results);
   }
   
   // Gets all public images by user
   public function getAllPublicByUser(User $user)
   {
     $results = $this->database->query("SELECT * from {$this->table} WHERE user_id = %i AND public = 1 ORDER BY date_modified DESC",$user->getId());
-    return array_map([$this,'fromArray'],$results);
+    return array_map(function($result) {
+      return $this->hydrator->deserialize($result,new Image);
+    },$results);
   }
   
   // Get all names as an array

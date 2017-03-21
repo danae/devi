@@ -1,5 +1,5 @@
 <?php
-namespace Gallerie\Application;
+namespace Picturee\Application;
 
 use Exception;
 

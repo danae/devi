@@ -14,7 +14,9 @@ $app['settings.db.database'] = 'database';
 // uploaded images, %s is replaced by the image name
 $app['settings.storage'] = 'store/%s.gz';
 
-// Supported MIME types
+// Accepted MIME types
+// Update this to the MIME types you want to accept while uploading, the array
+// consists of the MIME type as key and the default extension as value
 $app['settings.mimetypes'] = [
   'image/png' => 'png',
   'image/jpeg' => 'jpg',

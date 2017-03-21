@@ -1,8 +1,8 @@
 <?php
-namespace Gallerie\Authorization;
+namespace Picturee\Authorization;
 
 use DateTime;
-use Gallerie\Model\User;
+use Picturee\Model\User;
 use Symfony\Component\HttpFoundation\Request;
 
 class Authorization_Hmac implements AuthorizationInterface

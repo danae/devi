@@ -1,5 +1,5 @@
 <?php
-namespace Gallerie\Authorization;
+namespace Picturee\Authorization;
 
 use Symfony\Component\HttpFoundation\Request;
 

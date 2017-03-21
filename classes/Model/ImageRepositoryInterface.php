@@ -1,5 +1,5 @@
 <?php
-namespace Gallerie\Model;
+namespace Picturee\Model;
 
 interface ImageRepositoryInterface
 {
