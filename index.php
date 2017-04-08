@@ -1,7 +1,6 @@
 <?php
 require "vendor/autoload.php";
 
-use JDesrosiers\Silex\Provider\CorsServiceProvider;
 use Picturee\Application\ApplicationException;
 use Picturee\Application\ImageControllerProvider;
 use Picturee\Application\UserControllerProvider;
@@ -43,8 +42,14 @@ $app->error(function(Exception $ex) {
 });
 
 // Add support for CORS requests
-$app->register(new CorsServiceProvider);
-$app->after($app['cors']);
+$app->after(function (Request $request, Response $response) {
+  $response->headers->set('Access-Control-Allow-Origin', '*');
+  $response->headers->set('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization, X-Requested-With');
+  $response->headers->set('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+});
+$app->options("{anything}", function () {
+  return new JsonResponse(null,204);
+});
 
 // Create the database
 $app['database'] = new MeekroDB(
