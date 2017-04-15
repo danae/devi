@@ -1,13 +1,13 @@
 <?php
 require "vendor/autoload.php";
 
-use Picturee\Application\ApplicationException;
-use Picturee\Application\ImageControllerProvider;
-use Picturee\Application\UserControllerProvider;
-use Picturee\Authorization\Authorization;
-use Picturee\Model\ImageRepository;
-use Picturee\Model\ImageStorage;
-use Picturee\Model\UserRepository;
+use Devi\Authorization\Authorization;
+use Devi\Controller\ApplicationException;
+use Devi\Controller\ImageControllerProvider;
+use Devi\Controller\UserControllerProvider;
+use Devi\Model\ImageRepository;
+use Devi\Model\ImageStorage;
+use Devi\Model\UserRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -40,12 +40,15 @@ $app->error(function(ApplicationException $ex) {
 $app->error(function(Exception $ex) {
   return new JsonResponse(['error' => $ex->getMessage()]);
 });
+$app->error(function(Error $ex) {
+  return new JsonResponse(['error' => $ex->getMessage(),'stack' => $ex->getTrace()]);
+});
 
 // Add support for CORS requests
 $app->after(function (Request $request, Response $response) {
-  $response->headers->set('Access-Control-Allow-Origin', '*');
-  $response->headers->set('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization, X-Requested-With');
-  $response->headers->set('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+  $response->headers->set('Access-Control-Allow-Origin','*');
+  $response->headers->set('Access-Control-Allow-Headers','Origin, Content-Type, Accept, Authorization, X-Requested-With');
+  $response->headers->set('Access-Control-Allow-Methods','GET, POST, PUT, DELETE');
 });
 $app->options("{anything}", function () {
   return new JsonResponse(null,204);

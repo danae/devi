@@ -1,8 +1,8 @@
 <?php
-namespace Picturee\Authorization;
+namespace Devi\Authorization;
 
+use Devi\Controller\ApplicationException;
 use Exception;
-use Picturee\Application\ApplicationException;
 
 class AuthorizationException extends ApplicationException
 {

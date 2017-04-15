@@ -1,11 +1,11 @@
 <?php
-namespace Picturee\Model;
+namespace Devi\Model;
 
 use DateTime;
-use Picturee\Hydrator\BooleanStrategy;
-use Picturee\Hydrator\DateTimeStrategy;
-use Picturee\Hydrator\Hydrator;
-use Picturee\Hydrator\IntegerStrategy;
+use Devi\Hydrator\BooleanStrategy;
+use Devi\Hydrator\DateTimeStrategy;
+use Devi\Hydrator\Hydrator;
+use Devi\Hydrator\IntegerStrategy;
 use MeekroDB;
 
 class ImageRepository implements ImageRepositoryInterface
@@ -32,41 +32,41 @@ class ImageRepository implements ImageRepositoryInterface
   }
   
   // Gets an image from the repository
-  public function get($id)
+  public function get(int $id): Image
   {
     $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE id = %i",$id);
     return $this->hydrator->deserialize($result,new Image);
   }
   
   // Gets an image by name
-  public function getByName($name)
+  public function getByName(string $name): Image
   {
     $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE name = %s",$name);
     return $this->hydrator->deserialize($result,new Image);
   }
   
   // Puts an image into the repository
-  public function put(Image $image)
+  public function put(Image $image): void
   {
     $array = $this->hydrator->serialize($image);
     $this->database->insert($this->table,$array);
   }
   
   // Patches an image in the repository
-  public function patch(Image $image)
+  public function patch(Image $image): void
   {
-    $array = $this->hydrator->serialize($image->withDateModified(new DateTime));
+    $array = $this->hydrator->serialize($image->setDateModified(new DateTime));
     $this->database->update($this->table,$array,'id = %d',$image->getId());
   }
   
   // Deletes an image from the repository
-  public function delete(Image $image)
+  public function delete(Image $image): void
   {
     $this->database->delete($this->table,'id = %d',$image->getId());
   }
   
   // Gets all images
-  public function getAll()
+  public function getAll(): array
   {
     $results = $this->database->query("SELECT * from {$this->table} ORDER BY date_modified DESC");
     return array_map(function($result) {
@@ -75,7 +75,7 @@ class ImageRepository implements ImageRepositoryInterface
   }
   
   // Gets all images by user
-  public function getAllByUser(User $user)
+  public function getAllByUser(User $user): array
   {
     $results = $this->database->query("SELECT * from {$this->table} WHERE user_id = %i ORDER BY date_modified DESC",$user->getId());
     return array_map(function($result) {
@@ -84,7 +84,7 @@ class ImageRepository implements ImageRepositoryInterface
   }
   
   // Gets all public images by user
-  public function getAllPublicByUser(User $user)
+  public function getAllPublicByUser(User $user): array
   {
     $results = $this->database->query("SELECT * from {$this->table} WHERE user_id = %i AND public = 1 ORDER BY date_modified DESC",$user->getId());
     return array_map(function($result) {
@@ -93,7 +93,7 @@ class ImageRepository implements ImageRepositoryInterface
   }
   
   // Get all names as an array
-  public function getAllNames()
+  public function getAllNames(): array
   {
     return $this->database->queryFirstColumn("SELECT name FROM {$this->table}");
   }

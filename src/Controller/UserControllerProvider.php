@@ -1,9 +1,9 @@
 <?php
-namespace Picturee\Application;
+namespace Devi\Controller;
 
 use DateTime;
-use Picturee\Model\User;
-use Picturee\Model\UserRepositoryInterface;
+use Devi\Model\User;
+use Devi\Model\UserRepositoryInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -104,16 +104,16 @@ class UserControllerProvider implements ControllerProviderInterface
 
     // Replace the fields
     if ($request->request->has('name'))
-      $user->withName($request->request->get('name'));
+      $user->setName($request->request->get('name'));
     if ($request->request->has('email'))
-      $user->withEmail($request->request->get('email'));
+      $user->setEmail($request->request->get('email'));
     if ($request->request->has('password'))
-      $user->withPassword($request->request->get('password'));
+      $user->setPassword($request->request->get('password'));
     if ($request->request->has('public'))
-      $user->withPublic($request->request->get('public'));
+      $user->setPublic($request->request->get('public'));
 
     // Patch the updated user in the database
-    $this->repo->patch($user->withDateModified(new DateTime));
+    $this->repo->patch($user->setDateModified(new DateTime));
 
     // Return the user
     return new JsonResponse($user);

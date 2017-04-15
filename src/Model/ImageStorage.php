@@ -1,5 +1,5 @@
 <?php
-namespace Picturee\Model;
+namespace Devi\Model;
 
 use Symfony\Component\HttpFoundation\File\File;
 

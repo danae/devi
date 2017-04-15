@@ -1,8 +1,8 @@
 <?php
-namespace Picturee\Authorization;
+namespace Devi\Authorization;
 
 use DateTime;
-use Picturee\Model\User;
+use Devi\Model\User;
 use Symfony\Component\HttpFoundation\Request;
 
 class Authorization_Hmac implements AuthorizationInterface

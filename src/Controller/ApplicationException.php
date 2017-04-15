@@ -1,5 +1,5 @@
 <?php
-namespace Picturee\Application;
+namespace Devi\Controller;
 
 use Exception;
 

@@ -1,5 +1,5 @@
 <?php
-namespace Picturee\Model;
+namespace Devi\Model;
 
 use DateTime;
 use JsonSerializable;
@@ -17,81 +17,81 @@ class User implements JsonSerializable
   private $date_modified;
   
   // Management
-  public function getId()
+  public function getId(): int
   {
     return $this->id;
   }
-  public function withId($id)
+  public function setId(int $id)
   {
     $this->id = $id;
     return $this;
   }
-  public function getName()
+  public function getName(): string
   {
     return $this->name;
   }
-  public function withName($name)
+  public function setName(string $name): self
   {
     $this->name = $name;
     return $this;
   }
-  public function getEmail()
+  public function getEmail(): string
   {
     return $this->email;
   }
-  public function withEmail($email)
+  public function setEmail(string $email): self
   {
     $this->email = $email;
     return $this;
   }
-  public function getPassword()
+  public function getPassword(): string
   {
     return $this->password;
   }
-  public function withPassword($password)
+  public function setPassword(string $password): self
   {
     $this->password = $password;
     return $this;
   }
-  public function getPublicKey()
+  public function getPublicKey(): string
   {
     return $this->public_key;
   }
-  public function withPublicKey($public_key)
+  public function setPublicKey(string $public_key): self
   {
     $this->public_key = $public_key;
     return $this;
   }
-  public function getPrivateKey()
+  public function getPrivateKey(): string
   {
     return $this->private_key;
   }
-  public function withPrivateKey($private_key)
+  public function setPrivateKey(string $private_key): self
   {
     $this->private_key = $private_key;
     return $this;
   }
-  public function getDateCreated()
+  public function getDateCreated(): DateTime
   {
     return $this->date_created;
   }
-  public function withDateCreated($date_created)
+  public function setDateCreated(DateTime $date_created): self
   {
     $this->date_created = $date_created;
     return $this;
   }
-  public function getDateModified()
+  public function getDateModified(): DateTime
   {
     return $this->date_modified;
   }
-  public function withDateModified($date_modified)
+  public function setDateModified(DateTime $date_modified): self
   {
     $this->date_modified = $date_modified;
     return $this;
   }
   
   // Serialize to JSON
-  public function jsonSerialize()
+  public function jsonSerialize(): array
   {
     return [
       'name' => $this->getName(),
@@ -102,21 +102,21 @@ class User implements JsonSerializable
   }
 
   // Create a user
-  public static function create($name, $email, $password)
+  public static function create($name, $email, $password): self
   {
     // Return the new user
     return (new User)
-      ->withName($name)
-      ->withEmail($email)
-      ->withPassword($password)
-      ->withPublicKey(self::createKey())
-      ->withPrivateKey(self::createKey())
-      ->withDateCreated(new DateTime)
-      ->withDateModified(new DateTime);
+      ->setName($name)
+      ->setEmail($email)
+      ->setPassword($password)
+      ->setPublicKey(self::createKey())
+      ->setPrivateKey(self::createKey())
+      ->setDateCreated(new DateTime)
+      ->setDateModified(new DateTime);
   }
   
   // Create a public or private key
-  private static function createKey($length = 32)
+  private static function createKey($length = 32): string
   {    
     // Create pattern
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';

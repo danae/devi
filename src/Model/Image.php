@@ -1,5 +1,5 @@
 <?php
-namespace Picturee\Model;
+namespace Devi\Model;
 
 use DateTime;
 use JsonSerializable;
@@ -21,103 +21,103 @@ class Image implements JsonSerializable
   private $user_id;
   
   // Management
-  public function getId()
+  public function getId(): int
   {
     return $this->id;
   }
-  public function withId($id)
+  public function setId(int $id): self
   {
     $this->id = $id;
     return $this;
   }
-  public function getName()
+  public function getName(): string
   {
     return $this->name;
   }
-  public function withName($name)
+  public function setName(string $name): self
   {
     $this->name = $name;
     return $this;
   }
-  public function getFileName()
+  public function getFileName(): string
   {
     return $this->file_name;
   }
-  public function withFileName($file_name)
+  public function setFileName(string $file_name): self
   {
     $this->file_name = $file_name;
     return $this;
   }
-  public function getFileMimeType()
+  public function getFileMimeType(): string
   {
     return $this->file_mime_type;
   }
-  public function withFileMimeType($file_mime_type)
+  public function setFileMimeType(string $file_mime_type): self
   {
     $this->file_mime_type = $file_mime_type;
     return $this;
   }
-  public function getFileSize()
+  public function getFileSize(): int
   {
     return $this->file_size;
   }
-  public function withFileSize($file_size)
+  public function setFileSize(int $file_size): self
   {
     $this->file_size = $file_size;
     return $this;
   }
-  public function getDateCreated()
+  public function getDateCreated(): DateTime
   {
     return $this->date_created;
   }
-  public function withDateCreated($date_created)
+  public function setDateCreated(DateTime $date_created): self
   {
     $this->date_created = $date_created;
     return $this;
   }
-  public function getDateModified()
+  public function getDateModified(): DateTime
   {
     return $this->date_modified;
   }
-  public function withDateModified($date_modified)
+  public function setDateModified(DateTime $date_modified): self
   {
     $this->date_modified = $date_modified;
     return $this;
   }
-  public function isPublic()
+  public function isPublic(): bool
   {
     return $this->public;
   }
-  public function withPublic($public)
+  public function setPublic(bool $public)
   {
     $this->public = $public;
     return $this;
   }
-  public function getUserId()
+  public function getUserId(): int
   {
     return $this->user_id;
   }
-  public function withUserId($user_id)
+  public function setUserId(int $user_id): self
   {
     $this->user_id = $user_id;
     return $this;
   }
   
   // Post the raw image from an uploaded file
-  public function upload(ImageStorageInterface $storage, UploadedFile $file, $file_name = null)
+  public function upload(ImageStorageInterface $storage, UploadedFile $file, $file_name = null): self
   {
     // Upload the file
     $storage->put($this->name,$file);
     
     // Return the updated image
     return $this
-      ->withFileName($file_name !== null ? $file_name : ($this->getFileName() !== null ? $this->getFileName() : $file->getClientOriginalName()))
-      ->withFileMimeType($file->getMimeType())
-      ->withFileSize($file->getSize());
+      ->setFileName($file_name !== null ? $file_name : ($this->getFileName() !== null ? $this->getFileName() : $file->getClientOriginalName()))
+      ->setFileMimeType($file->getMimeType())
+      ->setFileSize($file->getSize());
   }
   
   // Get the raw image as a BinaryFileResponse
-  public function response(ImageStorageInterface $storage)
+  public function response(ImageStorageInterface $storage): ResponseInterface
   {
     // Get the file location
     $file = $storage->get($this->getName());
@@ -139,7 +139,7 @@ class Image implements JsonSerializable
   }
   
   // Serialize to JSON
-  public function jsonSerialize()
+  public function jsonSerialize(): array
   {
     global $app;
     
@@ -156,19 +156,19 @@ class Image implements JsonSerializable
   }
   
   // Create an image
-  public static function create(User $user)
+  public static function create(User $user): self
   {
     // Return the new image
     return (new Image)
-      ->withUserId($user->getId())
-      ->withName(self::createName())
-      ->withDateCreated(new DateTime)
-      ->withDateModified(new DateTime)
-      ->withPublic(true);
+      ->setUserId($user->getId())
+      ->setName(self::createName())
+      ->setDateCreated(new DateTime)
+      ->setDateModified(new DateTime)
+      ->setPublic(true);
   }
   
   // Generate an image name
-  private static function createName($length = null)
+  private static function createName($length = null): string
   {
     global $app;
     

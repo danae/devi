@@ -1,10 +1,10 @@
 <?php
-namespace Picturee\Application;
+namespace Devi\Controller;
 
 use DateTime;
-use Picturee\Model\Image;
-use Picturee\Model\ImageRepositoryInterface;
-use Picturee\Model\ImageStorageInterface;
+use Devi\Model\Image;
+use Devi\Model\ImageRepositoryInterface;
+use Devi\Model\ImageStorageInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -98,9 +98,9 @@ class ImageControllerProvider implements ControllerProviderInterface
   
     // Replace the fields
     if ($request->request->has('file_name'))
-      $image->withFileName($request->request->get('file_name'));
+      $image->setFileName($request->request->get('file_name'));
     if ($request->request->has('public'))
-      $image->withPublic((boolean)$request->request->get('public'));
+      $image->setPublic((boolean)$request->request->get('public'));
   
     // Patch the updated image in the database
     $this->repo->patch($image);
@@ -139,7 +139,7 @@ class ImageControllerProvider implements ControllerProviderInterface
 
     // Replace the image
     $image->upload($this->storage,$file);
-    $this->repo->patch($image->withDateModified(new DateTime));
+    $this->repo->patch($image->setDateModified(new DateTime));
     
     // Return the image
     return new JsonResponse($image);

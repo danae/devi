@@ -1,5 +1,5 @@
 <?php
-namespace Picturee\Hydrator;
+namespace Devi\Hydrator;
 
 use ReflectionClass;
 use RuntimeException;

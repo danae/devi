@@ -1,12 +1,12 @@
 <?php
-namespace Picturee\Authorization;
+namespace Devi\Authorization;
 
 use Symfony\Component\HttpFoundation\Request;
 
 class Authorization implements AuthorizationInterface
 {
   // Authorizes a request or throws an exception if failed
-  public function authorize(Request $request)
+  public function authorize(Request $request): void
   {
     global $app;
     
@@ -32,7 +32,7 @@ class Authorization implements AuthorizationInterface
   }
   
   // Optionally authorizes a request
-  public function optional(Request $request)
+  public function optional(Request $request): void
   {
     try
     {
@@ -40,7 +40,7 @@ class Authorization implements AuthorizationInterface
     } 
     catch (AuthorizationException $ex) 
     {
-      return null;
+      return;
     }
   }
 }

@@ -1,5 +1,5 @@
 <?php
-namespace Picturee\Hydrator;
+namespace Devi\Hydrator;
 
 class IntegerStrategy implements Strategy
 {
