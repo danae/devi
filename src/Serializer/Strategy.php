@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Hydrator;
+namespace Devi\Serializer;
 
 interface Strategy
 {

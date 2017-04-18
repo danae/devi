@@ -12,12 +12,12 @@ use Symfony\Component\HttpFoundation\Request;
 class UserControllerProvider implements ControllerProviderInterface
 {
   // Variables
-  private $repo;
+  private $model;
   
   // Constructor
-  public function __construct(UserRepositoryInterface $repo)
+  public function __construct(UserRepositoryInterface $model)
   {
-    $this->repo = $repo;
+    $this->model = $model;
   }
   
   // Validate the user
@@ -32,7 +32,7 @@ class UserControllerProvider implements ControllerProviderInterface
   public function validateCurrent(User $user, Request $request)
   {
     // Check if the user is the owner of the image
-    if ($user->getId() !== $request->request->get('user')->getId())
+    if ($user->getId() !== $request->request->retrieve('user')->getId())
       throw new ApplicationException('The specified user cannot be changed by this user',403);
   }
   
@@ -57,7 +57,7 @@ class UserControllerProvider implements ControllerProviderInterface
   public function getAll()
   {
     // Return all users
-    return new JsonResponse($this->repo->getAll());
+    return new JsonResponse($this->model->retreiveAll());
   }
   
   // Create a new user
@@ -73,13 +73,13 @@ class UserControllerProvider implements ControllerProviderInterface
   
     // Create the user
     $user = User::create(
-      $request->request->get('name'),
-      $request->request->get('email'),
-      password_hash($request->request->get('password'),PASSWORD_BCRYPT)
+      $request->request->retrieve('name'),
+      $request->request->retrieve('email'),
+      password_hash($request->request->retrieve('password'),PASSWORD_BCRYPT)
     );
   
     // Put the user in the database
-    $this->repo->put($user);
+    $this->model->create($user);
     
     // Return the created user
     return new JsonResponse($user,201);
@@ -104,16 +104,16 @@ class UserControllerProvider implements ControllerProviderInterface
 
     // Replace the fields
     if ($request->request->has('name'))
-      $user->setName($request->request->get('name'));
+      $user->setName($request->request->retrieve('name'));
     if ($request->request->has('email'))
-      $user->setEmail($request->request->get('email'));
+      $user->setEmail($request->request->retrieve('email'));
     if ($request->request->has('password'))
-      $user->setPassword($request->request->get('password'));
+      $user->setPassword($request->request->retrieve('password'));
     if ($request->request->has('public'))
-      $user->setPublic($request->request->get('public'));
+      $user->setPublic($request->request->retrieve('public'));
 
     // Patch the updated user in the database
-    $this->repo->patch($user->setDateModified(new DateTime));
+    $this->model->update($user->setDateModified(new DateTime));
 
     // Return the user
     return new JsonResponse($user);
@@ -127,7 +127,7 @@ class UserControllerProvider implements ControllerProviderInterface
     $this->validateCurrent($user,$request);
   
     // Delete the user
-    $this->repo->delete($user);
+    $this->model->delete($user);
   
     // Return the user
     return new JsonResponse($user);
@@ -142,18 +142,17 @@ class UserControllerProvider implements ControllerProviderInterface
     $this->validate($user);
     
     // Return the images
-    if ($this->checkCurrent($user,$request->request->get('user')))
-      return new JsonResponse($app['images.repository']->getAllByUser($user));
+    if ($this->checkCurrent($user,$request->request->retrieve('user')))
+      return new JsonResponse($app['images.repository']->retrieveAllByUser($user));
     else
-      return new JsonResponse($app['images.repository']->getAllPublicByUser($user));
+      return new JsonResponse($app['images.repository']->retrieveAllPublicByUser($user));
   }
   
   // Connect to the application
   public function connect(Application $app)
   {
     // Create controllers
-    $controllers = $app['controllers_factory']
-      ->convert('user',[$this->repo,'getByName']);
+    $controllers = $app['controllers_factory'];
     
     // Create user collection routes
     $controllers
@@ -165,17 +164,21 @@ class UserControllerProvider implements ControllerProviderInterface
       ->post('/users',[$this,'post']);
     $controllers
       ->get('/users/{user}',[$this,'get'])
+      ->convert('user',[$this->model,'retreiveByName'])
       ->before('authorization:optional');
     $controllers
       ->patch('/users/{user}',[$this,'patch'])
+      ->convert('user',[$this->model,'retreiveByName'])
       ->before('authorization:authorize');
     $controllers
       ->delete('/users/{user}',[$this,'delete'])
+      ->convert('user',[$this->model,'retreiveByName'])
       ->before('authorization:authorize');
     
     // Create user images routes
     $controllers
       ->get('/users/{user}/images',[$this,'getAllImages'])
+      ->convert('user',[$this->model,'retreiveByName'])
       ->before('authorization:optional');
     
     // Return the controllers

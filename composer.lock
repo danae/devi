@@ -4,8 +4,38 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "801644d18f3d1a70eebe289fb975bcfc",
+    "content-hash": "559f310ac48863407a0090d4d4d1a2ba",
     "packages": [
+        {
+            "name": "imdevi/flysystem-gzip",
+            "version": "dev-master",
+            "dist": {
+                "type": "path",
+                "url": "../flysystem-gzip",
+                "reference": "18fdd3c9761a364b12ca5d4525f8fdaa0c32f01c",
+                "shasum": null
+            },
+            "require": {
+                "league/flysystem": "^1.0",
+                "php": "^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Devi\\Flysystem\\Gzip\\": "src/"
+                }
+            },
+            "license": [
+                "GPL-3.0+"
+            ],
+            "authors": [
+                {
+                    "name": "dengsn",
+                    "email": "info@dengsn.com"
+                }
+            ],
+            "description": "Adds reading and writing of gzipped streams to Flysystem"
+        },
         {
             "name": "league/flysystem",
             "version": "1.0.37",

@@ -5,9 +5,11 @@ use Devi\Authorization\Authorization;
 use Devi\Controller\ApplicationException;
 use Devi\Controller\ImageControllerProvider;
 use Devi\Controller\UserControllerProvider;
-use Devi\Model\ImageRepository;
-use Devi\Model\ImageStorage;
-use Devi\Model\UserRepository;
+use Devi\Flysystem\Gzip\PutGzipStreamPlugin;
+use Devi\Flysystem\Gzip\ReadGzipStreamPlugin;
+use Devi\Implementation\MeekroDB\ImageRepository;
+use Devi\Implementation\MeekroDB\UserRepository;
+use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -68,6 +70,14 @@ $app['authorization'] = function() {
   return new Authorization;
 };
 
+// Create the file system
+$app['storage'] = function($app) {
+  $filesystem = new Filesystem($app['settings.storage']);
+  $filesystem->addPlugin(new ReadGzipStreamPlugin);
+  $filesystem->addPlugin(new PutGzipStreamPlugin);
+  return $filesystem;
+};
+
 // Create the repositories and providers
 $app['users.repository'] = function($app) {
   return new UserRepository($app['database'],'users');
@@ -75,14 +85,11 @@ $app['users.repository'] = function($app) {
 $app['users.provider'] = function($app) {
   return new UserControllerProvider($app['users.repository']);
 };
-$app['images.storage'] = function($app) {
-  return new ImageStorage($app['settings.storage']);
-};
 $app['images.repository'] = function($app) {
-  return new ImageRepository($app['database'],'images',$app['images.storage']);
+  return new ImageRepository($app['database'],'images',$app['storage']);
 };
 $app['images.provider'] = function($app) {
-  return new ImageControllerProvider($app['images.repository'],$app['images.storage']);
+  return new ImageControllerProvider($app['images.repository'],$app['storage']);
 };
 
 // Create the controllers

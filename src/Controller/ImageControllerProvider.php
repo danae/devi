@@ -4,7 +4,7 @@ namespace Devi\Controller;
 use DateTime;
 use Devi\Model\Image;
 use Devi\Model\ImageRepositoryInterface;
-use Devi\Model\ImageStorageInterface;
+use League\Flysystem\Filesystem;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,14 +13,14 @@ use Symfony\Component\HttpFoundation\Request;
 class ImageControllerProvider implements ControllerProviderInterface
 {
   // Variables
-  private $repo;
-  private $storage;
+  private $model;
+  private $filesystem;
   
   // Constructor
-  public function __construct(ImageRepositoryInterface $repo, ImageStorageInterface $storage)
+  public function __construct(ImageRepositoryInterface $model, Filesystem $filesystem)
   {
-    $this->repo = $repo;
-    $this->storage = $storage;
+    $this->model = $model;
+    $this->filesystem = $filesystem;
   }
   
   // Validate an image
@@ -60,20 +60,20 @@ class ImageControllerProvider implements ControllerProviderInterface
   public function getAll()
   {
     // Return all images
-    return new JsonResponse($this->repo->getAll());
+    return new JsonResponse($this->model->retrieveAll());
   }
   
   // Create a new image
   public function post(Request $request)
   {  
     // Validate the file
-    $file = $request->files->get('file');
+    $file = $request->files->retrieve('file');
     $this->validateFile($file);
   
     // Create the image
-    $image = Image::create($request->request->get('user'));
-    $image->upload($this->storage,$file);
-    $this->repo->put($image);
+    $image = Image::create($request->request->retrieve('user'));
+    $image->upload($this->filesystem,$file);
+    $this->model->create($image);
     
     // Return the created image
     return new JsonResponse($image,201);
@@ -94,16 +94,16 @@ class ImageControllerProvider implements ControllerProviderInterface
   {
     // Validate the image
     $this->validate($image);
-    $this->validateOwner($image,$request->request->get('user'));
+    $this->validateOwner($image,$request->request->retrieve('user'));
   
     // Replace the fields
     if ($request->request->has('file_name'))
-      $image->setFileName($request->request->get('file_name'));
+      $image->setFileName($request->request->retrieve('file_name'));
     if ($request->request->has('public'))
-      $image->setPublic((boolean)$request->request->get('public'));
+      $image->setPublic((boolean)$request->request->retrieve('public'));
   
     // Patch the updated image in the database
-    $this->repo->patch($image);
+    $this->model->update($image);
   
     // Return the image
     return new JsonResponse($image);
@@ -114,13 +114,13 @@ class ImageControllerProvider implements ControllerProviderInterface
   {
     // Validate the image
     $this->validate($image);
-    $this->validateOwner($image,$request->request->get('user'));
+    $this->validateOwner($image,$request->request->retrieve('user'));
   
     // Delete the image
-    $this->repo->delete($image);
+    $this->model->delete($image);
     
     // Delete the image from the storage
-    $this->storage->delete($image->getName());
+    $this->filesystem->delete($image->getName());
   
     // Return the image
     return new JsonResponse($image);
@@ -131,15 +131,15 @@ class ImageControllerProvider implements ControllerProviderInterface
   {
     // Validate the image
     $this->validate($image);
-    $this->validateOwner($image,$request->request->get('user'));
+    $this->validateOwner($image,$request->request->retrieve('user'));
   
     // Validate the file
-    $file = $request->files->get('file');
+    $file = $request->files->retrieve('file');
     $this->validateFile($file);
 
     // Replace the image
-    $image->upload($this->storage,$file);
-    $this->repo->patch($image->setDateModified(new DateTime));
+    $image->upload($this->filesystem,$file);
+    $this->model->update($image->setDateModified(new DateTime));
     
     // Return the image
     return new JsonResponse($image);
@@ -152,15 +152,14 @@ class ImageControllerProvider implements ControllerProviderInterface
     $this->validate($image);
     
     // Return the raw data
-    return $image->response($this->storage);
+    return $image->response($this->filesystem);
   }
   
   // Connect to the application
   public function connect(Application $app)
   {    
     // Create controllers
-    $controllers = $app['controllers_factory']
-      ->convert('image',[$this->repo,'getByName']);
+    $controllers = $app['controllers_factory'];
     
     // Create image collection routes
     $controllers
@@ -173,20 +172,25 @@ class ImageControllerProvider implements ControllerProviderInterface
       ->before('authorization:authorize');
     $controllers
       ->get('/images/{image}',[$this,'get'])
+      ->convert('image',[$this->model,'retrieveByName'])
       ->before('authorization:optional');
     $controllers
       ->patch('/images/{image}',[$this,'patch'])
+      ->convert('image',[$this->model,'retrieveByName'])
       ->before('authorization:authorize');
     $controllers
       ->delete('/images/{image}',[$this,'delete'])
+      ->convert('image',[$this->model,'retrieveByName'])
       ->before('authorization:authorize');
 
     // Create raw image routes
     $controllers
       ->post('/images/{image}/raw',[$this,'postRaw'])
+      ->convert('image',[$this->model,'retrieveByName'])
       ->before('authorization:authorize');
     $controllers
       ->get('/images/{image}/raw',[$this,'getRaw'])
+      ->convert('image',[$this->model,'retrieveByName'])
       ->before('authorization:optional');
     
     // Return the controllers

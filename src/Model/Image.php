@@ -3,8 +3,9 @@ namespace Devi\Model;
 
 use DateTime;
 use JsonSerializable;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class Image implements JsonSerializable
@@ -104,10 +105,10 @@ class Image implements JsonSerializable
   }
   
   // Post the raw image from an uploaded file
-  public function upload(ImageStorageInterface $storage, UploadedFile $file, $file_name = null): self
+  public function upload(Filesystem $filesystem, UploadedFile $file, $file_name = null): self
   {
     // Upload the file
-    $storage->put($this->name,$file);
+    $filesystem->putGzipStream('image-' . $this->name . '.gz',$file->openFile('rb'));
     
     // Return the updated image
     return $this
@@ -117,22 +118,20 @@ class Image implements JsonSerializable
   }
   
   // Get the raw image as a BinaryFileResponse
-  public function response(ImageStorageInterface $storage): ResponseInterface
+  public function response(Filesystem $filesystem): Response
   {
     // Get the file location
-    $file = $storage->get($this->getName());
+    $file = $filesystem->read('image-' . $this->getName() . '.gz');
   
     // Create the response
-    $response = new BinaryFileResponse($file);
+    $response = new Response($file);
     $response->setLastModified($this->getDateModified());
-    $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE,$this->getFileName());
     
-    // Set the correct content type
+    // Set the correct content headers
+    $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_INLINE,$this->getFileName());
+    $response->headers->set('Content-Disposition',$disposition);
     $response->headers->set('Content-Type',$this->getFileMimeType());
-    
-    // Set content encoding if this file is gzipped
-    if ($file->getMimeType() === 'application/x-gzip')
-      $response->headers->set('Content-Encoding','gzip');
+    $response->headers->set('Content-Encoding','gzip');
     
     // Return the response
     return $response;
@@ -151,7 +150,7 @@ class Image implements JsonSerializable
       'date_created' => $this->getDateCreated()->format(DateTime::ISO8601),
       'date_modified' => $this->getDateModified()->format(DateTime::ISO8601),
       'public' => $this->isPublic(),
-      'user_name' => $app['users.repository']->get($this->getUserId())->getName()
+      'user_name' => $app['users.repository']->retrieve($this->getUserId())->getName()
     ];
   }
   
@@ -176,7 +175,7 @@ class Image implements JsonSerializable
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
     
     // Get already occupied names
-    $occupied = $app['images.repository']->getAllNames();
+    $occupied = $app['images.repository']->retrieveAllNames();
     $occupied_order = ceil(log(count($occupied),36)) + 1;
     
     // Set length

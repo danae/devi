@@ -1,7 +1,7 @@
 <?php
-namespace Devi\Hydrator;
+namespace Devi\Serializer;
 
-class IntegerStrategy implements Strategy
+class BooleanStrategy implements Strategy
 {
   // Serialize a value in the conversion from object to array
   public function serialize($value)
@@ -12,6 +12,6 @@ class IntegerStrategy implements Strategy
   // Deserialize a value in the conversion from array to object
   public function deserialize($value)
   {
-    return (int)$value;
+    return (boolean)$value;
   }
 }

@@ -29,7 +29,7 @@ class Authorization_Hmac implements AuthorizationInterface
       throw new AuthorizationException('The request was made more than 900 seconds in the past');
 
     // Check if the user is valid
-    $user = $app['users.repository']->getByPublicKey($public_key);
+    $user = $app['users.repository']->retrieveByPublicKey($public_key);
     if ($user == null)
       throw new AuthorizationException('The request authorization is invalid');
     
@@ -58,7 +58,7 @@ class Authorization_Hmac implements AuthorizationInterface
   // Get date of a request
   private static function getDate(Request $request)
   {
-    $date_header = $request->headers->has('Date') ? $request->headers->get('Date') : $request->headers->get('X-Request-Date');
+    $date_header = $request->headers->has('Date') ? $request->headers->retrieve('Date') : $request->headers->retrieve('X-Request-Date');
     return strtotime($date_header) ?: (int)$date_header;
   }
   

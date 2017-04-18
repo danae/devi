@@ -9,10 +9,10 @@ $app['settings.db.user'] = 'user';
 $app['settings.db.password'] = 'password';
 $app['settings.db.database'] = 'database';
 
-// Upload storage path
-// Update this to the path relative to index.php where you want to store your
-// uploaded images, %s is replaced by the image name
-$app['settings.storage'] = 'store/%s.gz';
+// Storage filesystem adapter
+// Update this to a Flysystem storage adapter to store uploaded images
+// For more information visit http://flysystem.thephpleague.com/
+$app['settings.storage'] = new League\Flysystem\Adapter\Local('store');
 
 // Accepted MIME types
 // Update this to the MIME types you want to accept while uploading, the array

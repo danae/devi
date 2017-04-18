@@ -1,10 +1,10 @@
 <?php
-namespace Devi\Hydrator;
+namespace Devi\Serializer;
 
 use ReflectionClass;
 use RuntimeException;
 
-class Hydrator
+class Serializer
 {
   // Variables
   private $strategies = [];
