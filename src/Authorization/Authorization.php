@@ -19,7 +19,7 @@ class Authorization implements AuthorizationInterface
       throw new AuthorizationException('The request did not contain a valid Authorization header');
 
     // Check if the user is valid
-    $user = $app['users.repository']->retrieveByName($auth_user);
+    $user = $app['users.repository']->findByName($auth_user);
     if ($user == null)
       throw new AuthorizationException('The specified user does not exist');
     

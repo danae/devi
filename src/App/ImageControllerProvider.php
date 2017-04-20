@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Controller;
+namespace Devi\App;
 
 use DateTime;
 use Devi\Model\Image;
@@ -14,12 +14,14 @@ class ImageControllerProvider implements ControllerProviderInterface
 {
   // Variables
   private $model;
+  private $storage;
   private $filesystem;
   
   // Constructor
-  public function __construct(ImageRepositoryInterface $model, Filesystem $filesystem)
+  public function __construct(ImageRepositoryInterface $model, StorageInterface $storage, Filesystem $filesystem)
   {
     $this->model = $model;
+    $this->storage = $storage;
     $this->filesystem = $filesystem;
   }
   
@@ -60,19 +62,19 @@ class ImageControllerProvider implements ControllerProviderInterface
   public function getAll()
   {
     // Return all images
-    return new JsonResponse($this->model->retrieveAll());
+    return new JsonResponse($this->model->findAll());
   }
   
   // Create a new image
   public function post(Request $request)
   {  
     // Validate the file
-    $file = $request->files->retrieve('file');
+    $file = $request->files->get('file');
     $this->validateFile($file);
   
     // Create the image
-    $image = Image::create($request->request->retrieve('user'));
-    $image->upload($this->filesystem,$file);
+    $image = Image::create($request->request->get('user'));
+    $image->upload($this->storage,$file);
     $this->model->create($image);
     
     // Return the created image
@@ -94,13 +96,13 @@ class ImageControllerProvider implements ControllerProviderInterface
   {
     // Validate the image
     $this->validate($image);
-    $this->validateOwner($image,$request->request->retrieve('user'));
+    $this->validateOwner($image,$request->request->get('user'));
   
     // Replace the fields
     if ($request->request->has('file_name'))
-      $image->setFileName($request->request->retrieve('file_name'));
+      $image->setFileName($request->request->get('file_name'));
     if ($request->request->has('public'))
-      $image->setPublic((boolean)$request->request->retrieve('public'));
+      $image->setPublic((boolean)$request->request->get('public'));
   
     // Patch the updated image in the database
     $this->model->update($image);
@@ -114,13 +116,13 @@ class ImageControllerProvider implements ControllerProviderInterface
   {
     // Validate the image
     $this->validate($image);
-    $this->validateOwner($image,$request->request->retrieve('user'));
+    $this->validateOwner($image,$request->request->get('user'));
   
     // Delete the image
     $this->model->delete($image);
     
     // Delete the image from the storage
-    $this->filesystem->delete($image->getName());
+    $this->filesystem->delete('image-' . $image->getName() . '.gz');
   
     // Return the image
     return new JsonResponse($image);
@@ -131,15 +133,15 @@ class ImageControllerProvider implements ControllerProviderInterface
   {
     // Validate the image
     $this->validate($image);
-    $this->validateOwner($image,$request->request->retrieve('user'));
+    $this->validateOwner($image,$request->request->get('user'));
   
     // Validate the file
-    $file = $request->files->retrieve('file');
+    $file = $request->files->get('file');
     $this->validateFile($file);
 
     // Replace the image
     $image->upload($this->filesystem,$file);
-    $this->model->update($image->setDateModified(new DateTime));
+    $this->model->update($image->setModified(new DateTime));
     
     // Return the image
     return new JsonResponse($image);
@@ -172,25 +174,25 @@ class ImageControllerProvider implements ControllerProviderInterface
       ->before('authorization:authorize');
     $controllers
       ->get('/images/{image}',[$this,'get'])
-      ->convert('image',[$this->model,'retrieveByName'])
+      ->convert('image',[$this->model,'findByName'])
       ->before('authorization:optional');
     $controllers
       ->patch('/images/{image}',[$this,'patch'])
-      ->convert('image',[$this->model,'retrieveByName'])
+      ->convert('image',[$this->model,'findByName'])
       ->before('authorization:authorize');
     $controllers
       ->delete('/images/{image}',[$this,'delete'])
-      ->convert('image',[$this->model,'retrieveByName'])
+      ->convert('image',[$this->model,'findByName'])
       ->before('authorization:authorize');
 
     // Create raw image routes
     $controllers
       ->post('/images/{image}/raw',[$this,'postRaw'])
-      ->convert('image',[$this->model,'retrieveByName'])
+      ->convert('image',[$this->model,'findByName'])
       ->before('authorization:authorize');
     $controllers
       ->get('/images/{image}/raw',[$this,'getRaw'])
-      ->convert('image',[$this->model,'retrieveByName'])
+      ->convert('image',[$this->model,'findByName'])
       ->before('authorization:optional');
     
     // Return the controllers

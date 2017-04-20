@@ -1,14 +1,15 @@
 <?php
 require "vendor/autoload.php";
 
+use Dengsn\Gzip\PutGzippedPlugin;
+use Dengsn\HttpFoundation\RespondGzippedPlugin;
+use Devi\App\ApplicationException;
+use Devi\App\ImageControllerProvider;
+use Devi\App\UserControllerProvider;
 use Devi\Authorization\Authorization;
-use Devi\Controller\ApplicationException;
-use Devi\Controller\ImageControllerProvider;
-use Devi\Controller\UserControllerProvider;
-use Devi\Flysystem\Gzip\PutGzipStreamPlugin;
-use Devi\Flysystem\Gzip\ReadGzipStreamPlugin;
-use Devi\Implementation\MeekroDB\ImageRepository;
 use Devi\Implementation\MeekroDB\UserRepository;
+use Devi\Implementation\PDO\ImageRepository;
+use Devi\Model\Storage\GzipWrapper;
 use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -65,17 +66,27 @@ $app['database'] = new MeekroDB(
 $app['database']->throw_exception_on_error = true;
 $app['database']->throw_exception_on_nonsql_error = true;
 
+$app['pdo'] = new PDO(
+  "mysql:host=" . $app['settings.db.server'] . ";dbname=" . $app['settings.db.database'],
+  $app['settings.db.user'],
+  $app['settings.db.password']
+ );
+$app['pdo']->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+
 // Create authorization middleware
 $app['authorization'] = function() {
   return new Authorization;
 };
 
 // Create the file system
-$app['storage'] = function($app) {
+$app['filesystem'] = function($app) {
   $filesystem = new Filesystem($app['settings.storage']);
-  $filesystem->addPlugin(new ReadGzipStreamPlugin);
-  $filesystem->addPlugin(new PutGzipStreamPlugin);
+  $filesystem->addPlugin(new PutGzippedPlugin);
+  $filesystem->addPlugin(new RespondGzippedPlugin);
   return $filesystem;
+};
+$app['storage'] = function($app) {
+  return new GzipWrapper(new FlysystemStorage($app['filesystem'],"image-%s.gz"));
 };
 
 // Create the repositories and providers
@@ -86,10 +97,10 @@ $app['users.provider'] = function($app) {
   return new UserControllerProvider($app['users.repository']);
 };
 $app['images.repository'] = function($app) {
-  return new ImageRepository($app['database'],'images',$app['storage']);
+  return new ImageRepository($app['pdo'],'images');
 };
 $app['images.provider'] = function($app) {
-  return new ImageControllerProvider($app['images.repository'],$app['storage']);
+  return new ImageControllerProvider($app['images.repository'],$app['storage'],$app['filesystem']);
 };
 
 // Create the controllers
@@ -97,4 +108,12 @@ $app->mount('/',$app['users.provider']);
 $app->mount('/',$app['images.provider']);
 
 // Run the application
-$app->run();
+try
+{
+  $app->run();
+}
+catch (Throwable $ex)
+{
+  $response = new JsonResponse(['error' => $ex->getMessage()]);
+  $response->send();
+}

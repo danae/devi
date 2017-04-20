@@ -4,16 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "559f310ac48863407a0090d4d4d1a2ba",
+    "content-hash": "a55ce9d66b7d2796e39c627684053547",
     "packages": [
         {
-            "name": "imdevi/flysystem-gzip",
-            "version": "dev-master",
+            "name": "dengsn/flysystem-gzip",
+            "version": "v0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/imdevi/flysystem-gzip.git",
+                "reference": "b8c1eaa3a489095eb9a68f2dd344830837dab2de"
+            },
             "dist": {
-                "type": "path",
-                "url": "../flysystem-gzip",
-                "reference": "18fdd3c9761a364b12ca5d4525f8fdaa0c32f01c",
-                "shasum": null
+                "type": "zip",
+                "url": "https://api.github.com/repos/imdevi/flysystem-gzip/zipball/b8c1eaa3a489095eb9a68f2dd344830837dab2de",
+                "reference": "b8c1eaa3a489095eb9a68f2dd344830837dab2de",
+                "shasum": ""
             },
             "require": {
                 "league/flysystem": "^1.0",
@@ -22,7 +27,41 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Devi\\Flysystem\\Gzip\\": "src/"
+                    "Dengsn\\Gzip\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0+"
+            ],
+            "authors": [
+                {
+                    "name": "dengsn",
+                    "email": "info@dengsn.com"
+                }
+            ],
+            "description": "Adds reading and writing of gzipped files and streams to Flysystem",
+            "time": "2017-04-20T13:35:46+00:00"
+        },
+        {
+            "name": "dengsn/flysystem-http-foundation",
+            "version": "dev-master",
+            "dist": {
+                "type": "path",
+                "url": "../flysystem-http-foundation",
+                "reference": "cf185a8400529b017d2ca9859b7016e89ef883ac",
+                "shasum": null
+            },
+            "require": {
+                "dengsn/flysystem-gzip": "^0.2",
+                "league/flysystem": "^1.0",
+                "php": "^7.0",
+                "symfony/http-foundation": "^3.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Dengsn\\HttpFoundation\\": "src/"
                 }
             },
             "license": [
@@ -34,7 +73,7 @@
                     "email": "info@dengsn.com"
                 }
             ],
-            "description": "Adds reading and writing of gzipped streams to Flysystem"
+            "description": "Adds HttpFoundation file responses to Flysystem"
         },
         {
             "name": "league/flysystem",

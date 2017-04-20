@@ -29,7 +29,7 @@ class Authorization_Hmac implements AuthorizationInterface
       throw new AuthorizationException('The request was made more than 900 seconds in the past');
 
     // Check if the user is valid
-    $user = $app['users.repository']->retrieveByPublicKey($public_key);
+    $user = $app['users.repository']->findByPublicKey($public_key);
     if ($user == null)
       throw new AuthorizationException('The request authorization is invalid');
     

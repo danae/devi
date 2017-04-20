@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Implementation\MeekroDB;
+namespace Devi\Implementation\PDO;
 
 use DateTime;
 use Devi\Model\User;
@@ -7,19 +7,19 @@ use Devi\Model\UserRepositoryInterface;
 use Devi\Serializer\DateTimeStrategy;
 use Devi\Serializer\IntegerStrategy;
 use Devi\Serializer\Serializer;
-use MeekroDB;
+use PDO;
 
 class UserRepository implements UserRepositoryInterface
 {
   // Variables
-  private $database;
+  private $pdo;
   private $table;
   private $serializer;
   
   // Constructor
-  public function __construct(MeekroDB $database, $table)
+  public function __construct(PDO $pdo, $table)
   {
-    $this->database = $database;
+    $this->pdo = $pdo;
     $this->table = $table;
     $this->serializer = (new Serializer)
       ->withStrategy('id',new IntegerStrategy)
@@ -27,24 +27,17 @@ class UserRepository implements UserRepositoryInterface
       ->withStrategy('date_modified',new DateTimeStrategy);
   }
   
-  // Puts a user into the repository
-  public function create(User $user): void
-  {
-    $array = $this->serializer->serialize($user);
-    $this->database->insert($this->table,$array);
-  }
-  
   // Gets a user from the repository
   public function find(int $id): User
   {
-    $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE id = %i",$id);
+    $result = $this->pdo->queryFirstRow("SELECT * FROM {$this->table} WHERE id = %i",$id);
     return $this->serializer->deserialize($result,new User);
   }
    
   // Gets all users
   public function findAll(): array
   {
-    $results = $this->database->query("SELECT * from {$this->table} ORDER BY date_created ASC");
+    $results = $this->pdo->query("SELECT * from {$this->table} ORDER BY date_created ASC");
     return array_map(function($result) {
       return $this->serializer->deserialize($result,new User);
     },$results);
@@ -53,27 +46,34 @@ class UserRepository implements UserRepositoryInterface
   // Gets a user by name
   public function findByName(string $name): User
   {
-    $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE name = %s",$name);
+    $result = $this->pdo->queryFirstRow("SELECT * FROM {$this->table} WHERE name = %s",$name);
     return $this->serializer->deserialize($result,new User);
   }
   
   // Gets a user by public key
   public function findByPublicKey(string $public_key): User
   {
-    $result = $this->database->queryFirstRow("SELECT * FROM {$this->table} WHERE public_key = %s",$public_key);
+    $result = $this->pdo->queryFirstRow("SELECT * FROM {$this->table} WHERE public_key = %s",$public_key);
     return $this->serializer->deserialize($result,new User);
+  }
+  
+  // Puts a user into the repository
+  public function create(User $user): void
+  {
+    $array = $this->serializer->serialize($user);
+    $this->pdo->insert($this->table,$array);
   }
   
   // Patches a user in the repository
   public function update(User $user): void
   {
     $array = $this->serializer->serialize($user->setModified(new DateTime));
-    $this->database->update($this->table,$array,'id = %d',$user->getId());
+    $this->pdo->update($this->table,$array,'id = %d',$user->getId());
   }
   
   // Deletes a user from the repository
   public function delete(User $user): void
   {
-    $this->database->delete($this->table,'id = %d',$user->getId());
+    $this->pdo->delete($this->table,'id = %d',$user->getId());
   }
 }

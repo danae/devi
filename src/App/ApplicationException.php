@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Controller;
+namespace Devi\App;
 
 use Exception;
 

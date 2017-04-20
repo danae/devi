@@ -6,7 +6,6 @@ use JsonSerializable;
 use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class Image implements JsonSerializable
 {
@@ -67,22 +66,22 @@ class Image implements JsonSerializable
     $this->file_size = $file_size;
     return $this;
   }
-  public function getDateCreated(): DateTime
+  public function getCreated(): DateTime
   {
     return $this->date_created;
   }
-  public function setDateCreated(DateTime $date_created): self
+  public function setCreated(DateTime $created): self
   {
-    $this->date_created = $date_created;
+    $this->date_created = $created;
     return $this;
   }
-  public function getDateModified(): DateTime
+  public function getModified(): DateTime
   {
     return $this->date_modified;
   }
-  public function setDateModified(DateTime $date_modified): self
+  public function setModified(DateTime $modified): self
   {
-    $this->date_modified = $date_modified;
+    $this->date_modified = $modified;
     return $this;
   }
   public function isPublic(): bool
@@ -105,14 +104,14 @@ class Image implements JsonSerializable
   }
   
   // Post the raw image from an uploaded file
-  public function upload(Filesystem $filesystem, UploadedFile $file, $file_name = null): self
+  public function upload(StorageInterface $storage, UploadedFile $file, $file_name = null): self
   {
     // Upload the file
-    $filesystem->putGzipStream('image-' . $this->name . '.gz',$file->openFile('rb'));
+    $storage->writeStream($this->name,$file->openFile('rb'));
     
     // Return the updated image
     return $this
-      ->setFileName($file_name !== null ? $file_name : ($this->getFileName() !== null ? $this->getFileName() : $file->getClientOriginalName()))
+      ->setFileName($file_name ?? ($this->getFileName() ?? $file->getClientOriginalName()))
       ->setFileMimeType($file->getMimeType())
       ->setFileSize($file->getSize());
   }
@@ -121,17 +120,10 @@ class Image implements JsonSerializable
   public function response(Filesystem $filesystem): Response
   {
     // Get the file location
-    $file = $filesystem->read('image-' . $this->getName() . '.gz');
-  
-    // Create the response
-    $response = new Response($file);
-    $response->setLastModified($this->getDateModified());
+    $response = $filesystem->respondGzipped('image-' . $this->getName() . '.gz',$this->getFileMimeType(),$this->getFileName());
     
     // Set the correct content headers
-    $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_INLINE,$this->getFileName());
-    $response->headers->set('Content-Disposition',$disposition);
-    $response->headers->set('Content-Type',$this->getFileMimeType());
-    $response->headers->set('Content-Encoding','gzip');
+    $response->setLastModified($this->getModified());
     
     // Return the response
     return $response;
@@ -147,10 +139,10 @@ class Image implements JsonSerializable
       'file_name' => $this->getFileName(),
       'file_mime_type' => $this->getFileMimeType(),
       'file_size' => $this->getFileSize(),
-      'date_created' => $this->getDateCreated()->format(DateTime::ISO8601),
-      'date_modified' => $this->getDateModified()->format(DateTime::ISO8601),
+      'created' => $this->getCreated()->format(DateTime::ISO8601),
+      'modified' => $this->getModified()->format(DateTime::ISO8601),
       'public' => $this->isPublic(),
-      'user_name' => $app['users.repository']->retrieve($this->getUserId())->getName()
+      'user' => $app['users.repository']->find($this->getUserId())
     ];
   }
   
@@ -161,8 +153,8 @@ class Image implements JsonSerializable
     return (new Image)
       ->setUserId($user->getId())
       ->setName(self::createName())
-      ->setDateCreated(new DateTime)
-      ->setDateModified(new DateTime)
+      ->setCreated(new DateTime)
+      ->setModified(new DateTime)
       ->setPublic(true);
   }
   
@@ -175,7 +167,7 @@ class Image implements JsonSerializable
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
     
     // Get already occupied names
-    $occupied = $app['images.repository']->retrieveAllNames();
+    $occupied = $app['images.repository']->findAllNames();
     $occupied_order = ceil(log(count($occupied),36)) + 1;
     
     // Set length
