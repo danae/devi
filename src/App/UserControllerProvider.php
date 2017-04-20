@@ -113,7 +113,7 @@ class UserControllerProvider implements ControllerProviderInterface
       $user->setPublic($request->request->get('public'));
 
     // Patch the updated user in the database
-    $this->model->update($user->setModified(new DateTime));
+    $this->model->update($user->setDateModified(new DateTime));
 
     // Return the user
     return new JsonResponse($user);

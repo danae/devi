@@ -66,22 +66,22 @@ class Image implements JsonSerializable
     $this->file_size = $file_size;
     return $this;
   }
-  public function getCreated(): DateTime
+  public function getDateCreated(): DateTime
   {
     return $this->date_created;
   }
-  public function setCreated(DateTime $created): self
+  public function setDateCreated(DateTime $date_created): self
   {
-    $this->date_created = $created;
+    $this->date_created = $date_created;
     return $this;
   }
-  public function getModified(): DateTime
+  public function getDateModified(): DateTime
   {
     return $this->date_modified;
   }
-  public function setModified(DateTime $modified): self
+  public function setDateModified(DateTime $date_modified): self
   {
-    $this->date_modified = $modified;
+    $this->date_modified = $date_modified;
     return $this;
   }
   public function isPublic(): bool
@@ -117,13 +117,11 @@ class Image implements JsonSerializable
   }
   
   // Get the raw image as a BinaryFileResponse
-  public function response(Filesystem $filesystem): Response
+  public function respond(StorageInterface $storage): Response
   {
-    // Get the file location
-    $response = $filesystem->respondGzipped('image-' . $this->getName() . '.gz',$this->getFileMimeType(),$this->getFileName());
-    
-    // Set the correct content headers
-    $response->setLastModified($this->getModified());
+    // Get the response from the storage
+    $response = $storage->respond($this->getName(),$this->getFileName(),$this->getFileMimeType());
+    $response->setLastModified($this->getDateModified());
     
     // Return the response
     return $response;
@@ -139,8 +137,8 @@ class Image implements JsonSerializable
       'file_name' => $this->getFileName(),
       'file_mime_type' => $this->getFileMimeType(),
       'file_size' => $this->getFileSize(),
-      'created' => $this->getCreated()->format(DateTime::ISO8601),
-      'modified' => $this->getModified()->format(DateTime::ISO8601),
+      'date_created' => $this->getDateCreated()->format(DateTime::ISO8601),
+      'date_modified' => $this->getDateModified()->format(DateTime::ISO8601),
       'public' => $this->isPublic(),
       'user' => $app['users.repository']->find($this->getUserId())
     ];
@@ -153,8 +151,8 @@ class Image implements JsonSerializable
     return (new Image)
       ->setUserId($user->getId())
       ->setName(self::createName())
-      ->setCreated(new DateTime)
-      ->setModified(new DateTime)
+      ->setDateCreated(new DateTime)
+      ->setDateModified(new DateTime)
       ->setPublic(true);
   }
   

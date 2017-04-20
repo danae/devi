@@ -2,7 +2,10 @@
 namespace Devi\Model\Storage;
 
 use Devi\Model\StorageInterface;
+use League\Flysystem\Exception;
 use League\Flysystem\Filesystem;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class Flysystem implements StorageInterface
 {
@@ -18,7 +21,7 @@ class Flysystem implements StorageInterface
   }
   
   // Read the contents of a blob
-  public function read($index)
+  public function read($index): string
   {
     $path = sprintf($this->format,$index);
     
@@ -36,7 +39,7 @@ class Flysystem implements StorageInterface
   }
 
   // Write a string to a blob
-  public function write($index, $contents)
+  public function write($index, $contents): void
   {
     $path = sprintf($this->format,$index);
     
@@ -45,7 +48,7 @@ class Flysystem implements StorageInterface
   }
   
   // Write a stream to a blob
-  public function writeStream($index, $stream)
+  public function writeStream($index, $stream): void
   {
     $path = sprintf($this->format,$index);
     
@@ -58,11 +61,29 @@ class Flysystem implements StorageInterface
   }
   
   // Delete a blob
-  public function delete($index)
+  public function delete($index): void
   {
     $path = sprintf($this->format,$index);
     
     // Delete the blob from the filesystem
     $this->filesystem->delete($path);
+  }
+  
+  // Create a response with the contents of a blob
+  public function respond($index, $filename, $filetype): Response
+  {
+    // Get the contents of the blob
+    $contents = $this->read($index);
+    
+    // Create a new response
+    $response = new Response($contents);
+    
+    // Set the response headers
+    $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_INLINE, $filename);
+    $response->headers->set('Content-Disposition',$disposition);
+    $response->headers->set('Content-Type',$filetype);
+    
+    // Return the response
+    return $response;
   }
 }

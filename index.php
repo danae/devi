@@ -1,14 +1,13 @@
 <?php
 require "vendor/autoload.php";
 
-use Dengsn\Gzip\PutGzippedPlugin;
-use Dengsn\HttpFoundation\RespondGzippedPlugin;
 use Devi\App\ApplicationException;
 use Devi\App\ImageControllerProvider;
 use Devi\App\UserControllerProvider;
 use Devi\Authorization\Authorization;
-use Devi\Implementation\MeekroDB\UserRepository;
-use Devi\Implementation\PDO\ImageRepository;
+use Devi\Model\PDO\ImageRepository;
+use Devi\Model\PDO\UserRepository;
+use Devi\Model\Storage\Flysystem;
 use Devi\Model\Storage\GzipWrapper;
 use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -41,10 +40,10 @@ $app->error(function(ApplicationException $ex) {
 
 // Add other error handling
 $app->error(function(Exception $ex) {
-  return new JsonResponse(['error' => $ex->getMessage()]);
-});
-$app->error(function(Error $ex) {
-  return new JsonResponse(['error' => $ex->getMessage(),'stack' => $ex->getTrace()]);
+  return new JsonResponse([
+    'error' => $ex->getMessage(),
+    'trace' => explode("\n",$ex->getTraceAsString())
+  ]);
 });
 
 // Add support for CORS requests
@@ -58,20 +57,12 @@ $app->options("{anything}", function () {
 });
 
 // Create the database
-$app['database'] = new MeekroDB(
-  $app['settings.db.server'],
-  $app['settings.db.user'],
-  $app['settings.db.password'],
-  $app['settings.db.database']);
-$app['database']->throw_exception_on_error = true;
-$app['database']->throw_exception_on_nonsql_error = true;
-
-$app['pdo'] = new PDO(
+$app['database'] = new PDO(
   "mysql:host=" . $app['settings.db.server'] . ";dbname=" . $app['settings.db.database'],
   $app['settings.db.user'],
   $app['settings.db.password']
  );
-$app['pdo']->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+$app['database']->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 
 // Create authorization middleware
 $app['authorization'] = function() {
@@ -79,14 +70,11 @@ $app['authorization'] = function() {
 };
 
 // Create the file system
-$app['filesystem'] = function($app) {
-  $filesystem = new Filesystem($app['settings.storage']);
-  $filesystem->addPlugin(new PutGzippedPlugin);
-  $filesystem->addPlugin(new RespondGzippedPlugin);
-  return $filesystem;
-};
 $app['storage'] = function($app) {
-  return new GzipWrapper(new FlysystemStorage($app['filesystem'],"image-%s.gz"));
+  $filesystem = new Filesystem($app['settings.storage']);
+  
+  return new GzipWrapper(
+    new Flysystem($filesystem,"image-%s.gz"));
 };
 
 // Create the repositories and providers
@@ -97,10 +85,10 @@ $app['users.provider'] = function($app) {
   return new UserControllerProvider($app['users.repository']);
 };
 $app['images.repository'] = function($app) {
-  return new ImageRepository($app['pdo'],'images');
+  return new ImageRepository($app['database'],'images');
 };
 $app['images.provider'] = function($app) {
-  return new ImageControllerProvider($app['images.repository'],$app['storage'],$app['filesystem']);
+  return new ImageControllerProvider($app['images.repository'],$app['storage']);
 };
 
 // Create the controllers
@@ -114,6 +102,9 @@ try
 }
 catch (Throwable $ex)
 {
-  $response = new JsonResponse(['error' => $ex->getMessage()]);
+  $response = new JsonResponse([
+    'error' => $ex->getMessage(),
+    'trace' => explode("\n",$ex->getTraceAsString())
+  ]);
   $response->send();
 }

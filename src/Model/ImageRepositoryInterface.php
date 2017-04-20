@@ -4,10 +4,10 @@ namespace Devi\Model;
 interface ImageRepositoryInterface
 {
   // Gets an image from the repository
-  public function find(int $id): Image;
+  public function find(int $id);
   
   // Gets an image by name
-  public function findByName(string $name): Image;
+  public function findByName(string $name);
   
   // Gets all images
   public function findAll(): array;

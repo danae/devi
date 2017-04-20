@@ -71,22 +71,22 @@ class User implements JsonSerializable
     $this->private_key = $private_key;
     return $this;
   }
-  public function getCreated(): DateTime
+  public function getDateCreated(): DateTime
   {
     return $this->date_created;
   }
-  public function setCreated(DateTime $created): self
+  public function setDateCreated(DateTime $date_created): self
   {
-    $this->date_created = $created;
+    $this->date_created = $date_created;
     return $this;
   }
-  public function getModified(): DateTime
+  public function getDateModified(): DateTime
   {
     return $this->date_modified;
   }
-  public function setModified(DateTime $modified): self
+  public function setDateModified(DateTime $date_modified): self
   {
-    $this->date_modified = $modified;
+    $this->date_modified = $date_modified;
     return $this;
   }
   
@@ -96,8 +96,8 @@ class User implements JsonSerializable
     return [
       'name' => $this->getName(),
       'email' => $this->getEmail(),
-      'created' => $this->getCreated()->format(DateTime::ISO8601),
-      'modified' => $this->getModified()->format(DateTime::ISO8601)
+      'date_created' => $this->getDateCreated()->format(DateTime::ISO8601),
+      'date_modified' => $this->getDateModified()->format(DateTime::ISO8601)
     ];
   }
 
@@ -111,8 +111,8 @@ class User implements JsonSerializable
       ->setPassword($password)
       ->setPublicKey(self::createKey())
       ->setPrivateKey(self::createKey())
-      ->setCreated(new DateTime)
-      ->setModified(new DateTime);
+      ->setDateCreated(new DateTime)
+      ->setDateModified(new DateTime);
   }
   
   // Create a public or private key

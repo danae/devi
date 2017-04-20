@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Implementation\PDO;
+namespace Devi\Model\PDO;
 
 use Devi\Model\Image;
 use Devi\Model\ImageRepositoryInterface;
@@ -32,7 +32,7 @@ class ImageRepository implements ImageRepositoryInterface
   }
   
   // Gets an image from the repository
-  public function find(int $id): Image
+  public function find(int $id)
   {
     $st = $this->pdo->prepare(
       "SELECT * FROM {$this->table}
@@ -40,11 +40,16 @@ class ImageRepository implements ImageRepositoryInterface
     $st->bindValue(':id',$id);
     $st->execute();
     $st->setFetchMode(PDO::FETCH_ASSOC);
-    return $this->serializer->deserialize($st->fetch(),new Image);
+    
+    // Return null if none found
+    if (($result = $st->fetch()) === FALSE)
+      return null;
+    else
+      return $this->serializer->deserialize($result,new Image);
   }
   
   // Gets an image by name
-  public function findByName(string $name): Image
+  public function findByName(string $name)
   {
     $st = $this->pdo->prepare(
       "SELECT * FROM {$this->table}
@@ -52,7 +57,12 @@ class ImageRepository implements ImageRepositoryInterface
     $st->bindValue(':name',$name);
     $st->execute();
     $st->setFetchMode(PDO::FETCH_ASSOC);
-    return $this->serializer->deserialize($st->fetch(),new Image);
+    
+    // Return null if none found
+    if (($result = $st->fetch()) === FALSE)
+      return null;
+    else
+      return $this->serializer->deserialize($result,new Image);
   }
   
   // Gets all images
@@ -63,6 +73,7 @@ class ImageRepository implements ImageRepositoryInterface
         ORDER BY date_modified DESC");
     $st->execute();
     $st->setFetchMode(PDO::FETCH_ASSOC);
+    
     return array_map(function($el) {
       return $this->serializer->deserialize($el,new Image);
     },$st->fetch());
@@ -78,6 +89,7 @@ class ImageRepository implements ImageRepositoryInterface
     $st->bindValue(':user_id',$user->getId());
     $st->execute();
     $st->setFetchMode(PDO::FETCH_ASSOC);
+    
     return array_map(function($el) {
       return $this->serializer->deserialize($el,new Image);
     },$st->fetch());
@@ -93,6 +105,7 @@ class ImageRepository implements ImageRepositoryInterface
     $st->bindValue(':user_id',$user->getId());
     $st->execute();
     $st->setFetchMode(PDO::FETCH_ASSOC);
+    
     return array_map(function($el) {
       return $this->serializer->deserialize($el,new Image);
     },$st->fetch());
@@ -119,8 +132,8 @@ class ImageRepository implements ImageRepositoryInterface
       ':file_name' => $image->getFileName(),
       ':file_mime_type' => $image->getFileMimeType(),
       ':file_size' => $image->getFileSize(),
-      ':date_created' => $image->getCreated(),
-      ':date_modified' => $image->getModified(),
+      ':date_created' => $image->getDateCreated(),
+      ':date_modified' => $image->getDateModified(),
       ':public' => $image->isPublic(),
       ':user_id' => $image->getUserId()
     ]);
@@ -139,8 +152,8 @@ class ImageRepository implements ImageRepositoryInterface
       ':file_name' => $image->getFileName(),
       ':file_mime_type' => $image->getFileMimeType(),
       ':file_size' => $image->getFileSize(),
-      ':date_created' => $image->getCreated(),
-      ':date_modified' => $image->getModified(),
+      ':date_created' => $image->getDateCreated(),
+      ':date_modified' => $image->getDateModified(),
       ':public' => $image->isPublic(),
       ':user_id' => $image->getUserId()
     ]);

@@ -4,7 +4,7 @@ namespace Devi\App;
 use DateTime;
 use Devi\Model\Image;
 use Devi\Model\ImageRepositoryInterface;
-use League\Flysystem\Filesystem;
+use Devi\Model\StorageInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,14 +15,12 @@ class ImageControllerProvider implements ControllerProviderInterface
   // Variables
   private $model;
   private $storage;
-  private $filesystem;
   
   // Constructor
-  public function __construct(ImageRepositoryInterface $model, StorageInterface $storage, Filesystem $filesystem)
+  public function __construct(ImageRepositoryInterface $model, StorageInterface $storage)
   {
     $this->model = $model;
     $this->storage = $storage;
-    $this->filesystem = $filesystem;
   }
   
   // Validate an image
@@ -141,7 +139,7 @@ class ImageControllerProvider implements ControllerProviderInterface
 
     // Replace the image
     $image->upload($this->filesystem,$file);
-    $this->model->update($image->setModified(new DateTime));
+    $this->model->update($image->setDateModified(new DateTime));
     
     // Return the image
     return new JsonResponse($image);
@@ -154,7 +152,7 @@ class ImageControllerProvider implements ControllerProviderInterface
     $this->validate($image);
     
     // Return the raw data
-    return $image->response($this->filesystem);
+    return $image->respond($this->storage);
   }
   
   // Connect to the application

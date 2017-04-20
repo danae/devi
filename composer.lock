@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "a55ce9d66b7d2796e39c627684053547",
+    "content-hash": "26ee30e28ed045b9d899baccfc65a0b0",
     "packages": [
         {
             "name": "dengsn/flysystem-gzip",
@@ -42,38 +42,6 @@
             ],
             "description": "Adds reading and writing of gzipped files and streams to Flysystem",
             "time": "2017-04-20T13:35:46+00:00"
-        },
-        {
-            "name": "dengsn/flysystem-http-foundation",
-            "version": "dev-master",
-            "dist": {
-                "type": "path",
-                "url": "../flysystem-http-foundation",
-                "reference": "cf185a8400529b017d2ca9859b7016e89ef883ac",
-                "shasum": null
-            },
-            "require": {
-                "dengsn/flysystem-gzip": "^0.2",
-                "league/flysystem": "^1.0",
-                "php": "^7.0",
-                "symfony/http-foundation": "^3.2"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Dengsn\\HttpFoundation\\": "src/"
-                }
-            },
-            "license": [
-                "GPL-3.0+"
-            ],
-            "authors": [
-                {
-                    "name": "dengsn",
-                    "email": "info@dengsn.com"
-                }
-            ],
-            "description": "Adds HttpFoundation file responses to Flysystem"
         },
         {
             "name": "league/flysystem",

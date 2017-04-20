@@ -2,6 +2,8 @@
 namespace Devi\Model\Storage;
 
 use Devi\Model\StorageInterface;
+use Exception;
+use Symfony\Component\HttpFoundation\Response;
 
 class GzipWrapper implements StorageInterface
 {
@@ -15,7 +17,7 @@ class GzipWrapper implements StorageInterface
   }
   
   // Read the contents of a blob
-  public function read($index)
+  public function read($index): string
   {
     // Read the file from the storage
     $contents = $this->storage->read($index);
@@ -43,7 +45,7 @@ class GzipWrapper implements StorageInterface
   }
 
   // Write a string to a blob
-  public function write($index, $contents, $level = 9)
+  public function write($index, $contents, $level = 9): void
   {
     // Compress the contents
     $contents = gzcompress($contents,$level);
@@ -53,7 +55,7 @@ class GzipWrapper implements StorageInterface
   }
   
   // Write a stream to a blob
-  public function writeStream($index, $stream, $level = 9)
+  public function writeStream($index, $stream, $level = 9): void
   {
     // Validate the stream
     if (!is_resource($stream))
@@ -67,9 +69,22 @@ class GzipWrapper implements StorageInterface
   }
   
   // Delete a blob
-  public function delete($index)
+  public function delete($index): void
   {
     // Pass delete to the storage
     $this->storage->delete($index);
+  }
+  
+  // Create a response with the contents of a blob
+  public function respond($index, $filename, $filetype): Response
+  {
+    // Get the response of the storage
+    $response = $this->storage->respond($index,$filename,$filetype);
+    
+    // Set the response headers
+    $response->headers->set('Content-Encoding','gzip');
+    
+    // Return the response
+    return $response;
   }
 }
