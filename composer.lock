@@ -4,45 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "26ee30e28ed045b9d899baccfc65a0b0",
+    "content-hash": "9eedd351e733998b071db8a9b7a1a2ac",
     "packages": [
-        {
-            "name": "dengsn/flysystem-gzip",
-            "version": "v0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/imdevi/flysystem-gzip.git",
-                "reference": "b8c1eaa3a489095eb9a68f2dd344830837dab2de"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/imdevi/flysystem-gzip/zipball/b8c1eaa3a489095eb9a68f2dd344830837dab2de",
-                "reference": "b8c1eaa3a489095eb9a68f2dd344830837dab2de",
-                "shasum": ""
-            },
-            "require": {
-                "league/flysystem": "^1.0",
-                "php": "^7.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Dengsn\\Gzip\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-3.0+"
-            ],
-            "authors": [
-                {
-                    "name": "dengsn",
-                    "email": "info@dengsn.com"
-                }
-            ],
-            "description": "Adds reading and writing of gzipped files and streams to Flysystem",
-            "time": "2017-04-20T13:35:46+00:00"
-        },
         {
             "name": "league/flysystem",
             "version": "1.0.37",
@@ -218,49 +181,6 @@
                 "psr-3"
             ],
             "time": "2016-10-10T12:19:37+00:00"
-        },
-        {
-            "name": "sergeytsalkov/meekrodb",
-            "version": "v2.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/SergeyTsalkov/meekrodb.git",
-                "reference": "eb36858f1aff94ae1665900e681a1cfb78563ee1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/SergeyTsalkov/meekrodb/zipball/eb36858f1aff94ae1665900e681a1cfb78563ee1",
-                "reference": "eb36858f1aff94ae1665900e681a1cfb78563ee1",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.2.0"
-            },
-            "type": "library",
-            "autoload": {
-                "classmap": [
-                    "db.class.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-3.0"
-            ],
-            "authors": [
-                {
-                    "name": "Sergey Tsalkov",
-                    "email": "stsalkov@gmail.com"
-                }
-            ],
-            "description": "The Simple PHP/MySQL Library",
-            "homepage": "http://www.meekro.com",
-            "keywords": [
-                "database",
-                "mysql",
-                "mysqli",
-                "pdo"
-            ],
-            "time": "2014-06-16T22:40:22+00:00"
         },
         {
             "name": "silex/silex",

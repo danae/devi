@@ -1,5 +1,6 @@
-# Ignores for Composer
+# Ignores for Composer and PHPUnit
 composer.phar
+phpunit.phar
 /vendor/
 
 # Commit your application's lock file http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file
@@ -10,6 +11,4 @@ composer.lock
 /nbproject/
 
 # Ignores for the project
-/cache/
-/store/
 /settings.php
