@@ -10,15 +10,17 @@ use Devi\Model\PDO\UserRepository;
 use Devi\Model\Storage\Flysystem;
 use Devi\Model\Storage\GzipWrapper;
 use League\Flysystem\Filesystem;
+use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-// Create the application
-$app = require('settings.php');
+// Create the application with the settings
+$app = new Application(require('settings.php'));
 
-// Add JSON request parsing
+// Before execution
 $app->before(function(Request $request) {
+  // Parse the request body if JSON
   if (strpos($request->headers->get('Content-Type'),'application/json') === 0) 
   {
     $data = json_decode($request->getContent(),true);
@@ -26,10 +28,17 @@ $app->before(function(Request $request) {
   }
 });
 
-// Add JSON response pretty printing
+// After execution
 $app->after(function(Request $request, Response $response) {
+  // Set CORS request responses
+  $response->headers->set('Access-Control-Allow-Origin','*');
+  $response->headers->set('Access-Control-Allow-Headers','Origin, Content-Type, Accept, Authorization, X-Requested-With');
+  $response->headers->set('Access-Control-Allow-Methods','GET, POST, PUT, DELETE');
+  
+  // Pretty print the JSON response
   if ($response instanceof JsonResponse)
     $response->setEncodingOptions(JSON_PRETTY_PRINT);
+  
   return $response;
 });
 
@@ -38,31 +47,17 @@ $app->error(function(ApplicationException $ex) {
   return new JsonResponse(['error' => $ex->getMessage()],$ex->getCode());
 });
 
-// Add other error handling
-$app->error(function(Exception $ex) {
-  return new JsonResponse([
-    'error' => $ex->getMessage(),
-    'trace' => explode("\n",$ex->getTraceAsString())
-  ]);
-});
-
 // Add support for CORS requests
-$app->after(function (Request $request, Response $response) {
-  $response->headers->set('Access-Control-Allow-Origin','*');
-  $response->headers->set('Access-Control-Allow-Headers','Origin, Content-Type, Accept, Authorization, X-Requested-With');
-  $response->headers->set('Access-Control-Allow-Methods','GET, POST, PUT, DELETE');
-});
 $app->options("{anything}", function () {
   return new JsonResponse(null,204);
 });
 
-// Create the database
-$app['database'] = new PDO(
-  "mysql:host=" . $app['settings.db.server'] . ";dbname=" . $app['settings.db.database'],
-  $app['settings.db.user'],
-  $app['settings.db.password']
- );
-$app['database']->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+// Create the database service
+$app['database'] = function($app) {
+  $pdo = new PDO("mysql:host=" . $app['db.server'] . ";dbname=" . $app['db.database'],$app['db.user'],$app['db.password']);
+  $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+  return $pdo;
+};
 
 // Create authorization middleware
 $app['authorization'] = function() {
@@ -71,7 +66,7 @@ $app['authorization'] = function() {
 
 // Create the file system
 $app['storage'] = function($app) {
-  $filesystem = new Filesystem($app['settings.storage']);
+  $filesystem = new Filesystem($app['storage-backend']);
   
   return new GzipWrapper(
     new Flysystem($filesystem,"image-%s.gz"));
@@ -96,15 +91,4 @@ $app->mount('/',$app['users.provider']);
 $app->mount('/',$app['images.provider']);
 
 // Run the application
-try
-{
-  $app->run();
-}
-catch (Throwable $ex)
-{
-  $response = new JsonResponse([
-    'error' => $ex->getMessage(),
-    'trace' => explode("\n",$ex->getTraceAsString())
-  ]);
-  $response->send();
-}
+$app->run();

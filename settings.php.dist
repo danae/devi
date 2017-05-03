@@ -1,28 +1,25 @@
 <?php
-// Create new application
-$app = new Silex\Application;
-
 // Database connection
 // Update these to your MySQL database settings
-$app['settings.db.server'] = 'localhost';
-$app['settings.db.user'] = 'user';
-$app['settings.db.password'] = 'password';
-$app['settings.db.database'] = 'database';
+$settings['db.server'] = 'localhost';
+$settings['db.user'] = 'user';
+$settings['db.password'] = 'password';
+$settings['db.database'] = 'database';
 
 // Storage filesystem adapter
 // Update this to a Flysystem storage adapter to store uploaded images
 // For more information visit http://flysystem.thephpleague.com/
-$app['settings.storage'] = new League\Flysystem\Adapter\Local('store');
+$settings['storage'] = new League\Flysystem\Adapter\Local('store');
 
 // Accepted MIME types
 // Update this to the MIME types you want to accept while uploading, the array
 // consists of the MIME type as key and the default extension as value
-$app['settings.mimetypes'] = [
+$settings['mimetypes'] = [
   'image/png' => 'png',
   'image/jpeg' => 'jpg',
   'image/gif' => 'gif',
   'image/svg+xml' => 'svg'
 ];
 
-// Return the application
-return $app;
+// Return the settings
+return $settings;
