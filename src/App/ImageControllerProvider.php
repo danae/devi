@@ -163,33 +163,33 @@ class ImageControllerProvider implements ControllerProviderInterface
     
     // Create image collection routes
     $controllers
-      ->get('/images',[$this,'getAll'])
+      ->get('/',[$this,'getAll'])
       ->before('authorization:optional');
 
     // Create image routes
     $controllers
-      ->post('/images',[$this,'post'])
+      ->post('/',[$this,'post'])
       ->before('authorization:authorize');
     $controllers
-      ->get('/images/{image}',[$this,'get'])
+      ->get('/{image}',[$this,'get'])
       ->convert('image',[$this->model,'findByName'])
       ->before('authorization:optional');
     $controllers
-      ->patch('/images/{image}',[$this,'patch'])
+      ->patch('/{image}',[$this,'patch'])
       ->convert('image',[$this->model,'findByName'])
       ->before('authorization:authorize');
     $controllers
-      ->delete('/images/{image}',[$this,'delete'])
+      ->delete('/{image}',[$this,'delete'])
       ->convert('image',[$this->model,'findByName'])
       ->before('authorization:authorize');
 
     // Create raw image routes
     $controllers
-      ->post('/images/{image}/raw',[$this,'postRaw'])
+      ->post('/{image}/raw',[$this,'postRaw'])
       ->convert('image',[$this->model,'findByName'])
       ->before('authorization:authorize');
     $controllers
-      ->get('/images/{image}/raw',[$this,'getRaw'])
+      ->get('/{image}/raw',[$this,'getRaw'])
       ->convert('image',[$this->model,'findByName'])
       ->before('authorization:optional');
     

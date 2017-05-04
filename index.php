@@ -87,8 +87,8 @@ $app['images.provider'] = function($app) {
 };
 
 // Create the controllers
-$app->mount('/',$app['users.provider']);
-$app->mount('/',$app['images.provider']);
+$app->mount('/users',$app['users.provider']);
+$app->mount('/images',$app['images.provider']);
 
 // Run the application
 $app->run();

@@ -156,28 +156,28 @@ class UserControllerProvider implements ControllerProviderInterface
     
     // Create user collection routes
     $controllers
-      ->get('/users',[$this,'getAll'])
+      ->get('/',[$this,'getAll'])
       ->before('authorization:optional');
 
     // Create user routes
     $controllers
-      ->post('/users',[$this,'post']);
+      ->post('/',[$this,'post']);
     $controllers
-      ->get('/users/{user}',[$this,'get'])
+      ->get('/{user}',[$this,'get'])
       ->convert('user',[$this->model,'findByName'])
       ->before('authorization:optional');
     $controllers
-      ->patch('/users/{user}',[$this,'patch'])
+      ->patch('/{user}',[$this,'patch'])
       ->convert('user',[$this->model,'findByName'])
       ->before('authorization:authorize');
     $controllers
-      ->delete('/users/{user}',[$this,'delete'])
+      ->delete('/{user}',[$this,'delete'])
       ->convert('user',[$this->model,'findByName'])
       ->before('authorization:authorize');
     
     // Create user images routes
     $controllers
-      ->get('/users/{user}/images',[$this,'getAllImages'])
+      ->get('/{user}/images/',[$this,'getAllImages'])
       ->convert('user',[$this->model,'findByName'])
       ->before('authorization:optional');
     
