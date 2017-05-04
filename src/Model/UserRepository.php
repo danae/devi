@@ -1,25 +1,27 @@
 <?php
-namespace Devi\Model\PDO;
+namespace Devi\Model;
 
-use DateTime;
-use Devi\Model\User;
-use Devi\Model\UserRepositoryInterface;
 use Devi\Serializer\DateTimeStrategy;
 use Devi\Serializer\IntegerStrategy;
 use Devi\Serializer\Serializer;
+use Devi\Utils\Database;
+use Devi\Utils\Hydrator;
 use PDO;
 
 class UserRepository implements UserRepositoryInterface
 {
   // Variables
-  private $pdo;
+  private $database;
   private $table;
   private $serializer;
   
   // Constructor
-  public function __construct(PDO $pdo, $table)
+  public function __construct(Database $database, $table)
   {
-    $this->pdo = $pdo;
+    $this->database = $database
+      ->useClass(User::class)
+      ->useStrategy('date_created',[Hydrator::class,'dateTimeStrategy'])
+      ->useStrategy('date_modified',[Hydrator::class,'dateTimeStrategy']);
     $this->table = $table;
     $this->serializer = (new Serializer)
       ->withStrategy('id',new IntegerStrategy)
@@ -30,7 +32,7 @@ class UserRepository implements UserRepositoryInterface
   // Gets a user from the repository
   public function find(int $id): User
   {
-    $st = $this->pdo->prepare(
+    $st = $this->database->prepare(
       "SELECT * FROM {$this->table}
         WHERE id = :id");
     $st->bindValue(':id',$id);
@@ -47,7 +49,7 @@ class UserRepository implements UserRepositoryInterface
   // Gets a user by name
   public function findByName(string $name): User
   {
-    $st = $this->pdo->prepare(
+    $st = $this->database->prepare(
       "SELECT * FROM {$this->table}
         WHERE name = :name");
     $st->bindValue(':name',$name);
@@ -64,7 +66,7 @@ class UserRepository implements UserRepositoryInterface
   // Gets a user by public key
   public function findByPublicKey(string $public_key): User
   {
-    $st = $this->pdo->prepare(
+    $st = $this->database->prepare(
       "SELECT * FROM {$this->table}
         WHERE public_key = :public_key");
     $st->bindValue(':public_key',$public_key);
@@ -81,7 +83,7 @@ class UserRepository implements UserRepositoryInterface
   // Gets all users
   public function findAll(): array
   {
-    $st = $this->pdo->prepare(
+    $st = $this->database->prepare(
       "SELECT * FROM {$this->table}
         ORDER BY date_modified DESC");
     $st->execute();
@@ -89,13 +91,13 @@ class UserRepository implements UserRepositoryInterface
     
     return array_map(function($el) {
       return $this->serializer->deserialize($el,new User);
-    },$results);
+    },$st->fetchAll());
   }
   
   // Puts a user into the repository
   public function create(User $user): void
   {
-    $st = $this->pdo->prepare(
+    $st = $this->database->prepare(
       "INSERT INTO {$this->table}
         (id, name, email, password, public_key, private_key, date_created, date_modified)
         VALUES NULL, :name, :email, :password, :public_key, :private_key, :date_created, :date_modified");
@@ -113,7 +115,7 @@ class UserRepository implements UserRepositoryInterface
   // Patches a user in the repository
   public function update(User $user): void
   {
-    $st = $this->pdo->prepare(
+    $st = $this->database->prepare(
       "UPDATE {$this->table}
         SET name = :name, email = :email, password = :password, public_key = :public_key, private_key = :private_key, date_created = :date_created, date_modified = :date_modified
         WHERE id = :id");
@@ -132,7 +134,7 @@ class UserRepository implements UserRepositoryInterface
   // Deletes a user from the repository
   public function delete(User $user): void
   {
-    $st = $this->pdo->prepare(
+    $st = $this->database->prepare(
       "DELETE FROM {$this->table}
         WHERE id = :id");
     $st->bindValue(':id',$user->getId());

@@ -5,10 +5,11 @@ use Devi\App\ApplicationException;
 use Devi\App\ImageControllerProvider;
 use Devi\App\UserControllerProvider;
 use Devi\Authorization\Authorization;
-use Devi\Model\PDO\ImageRepository;
-use Devi\Model\PDO\UserRepository;
+use Devi\Model\ImageRepository;
 use Devi\Model\Storage\Flysystem;
 use Devi\Model\Storage\GzipWrapper;
+use Devi\Model\UserRepository;
+use Devi\Utils\Database;
 use League\Flysystem\Filesystem;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -43,8 +44,9 @@ $app->after(function(Request $request, Response $response) {
 });
 
 // Add application exception handling
-$app->error(function(ApplicationException $ex) {
-  return new JsonResponse(['error' => $ex->getMessage()],$ex->getCode());
+$app->error(function(Exception $ex) {
+  return new Response($ex,500);
+  //return new JsonResponse(['error' => $ex->getMessage()],500);
 });
 
 // Add support for CORS requests
@@ -54,9 +56,7 @@ $app->options("{anything}", function () {
 
 // Create the database service
 $app['database'] = function($app) {
-  $pdo = new PDO("mysql:host=" . $app['db.server'] . ";dbname=" . $app['db.database'],$app['db.user'],$app['db.password']);
-  $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
-  return $pdo;
+  return new Database("mysql:host=" . $app['db.server'] . ";dbname=" . $app['db.database'],$app['db.user'],$app['db.password']);
 };
 
 // Create authorization middleware
@@ -65,8 +65,8 @@ $app['authorization'] = function() {
 };
 
 // Create the file system
-$app['storage'] = function($app) {
-  $filesystem = new Filesystem($app['storage-backend']);
+$app['images.storage'] = function($app) {
+  $filesystem = new Filesystem($app['storage']);
   
   return new GzipWrapper(
     new Flysystem($filesystem,"image-%s.gz"));
@@ -83,7 +83,7 @@ $app['images.repository'] = function($app) {
   return new ImageRepository($app['database'],'images');
 };
 $app['images.provider'] = function($app) {
-  return new ImageControllerProvider($app['images.repository'],$app['storage']);
+  return new ImageControllerProvider($app['images.repository'],$app['images.storage']);
 };
 
 // Create the controllers

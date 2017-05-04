@@ -2,6 +2,7 @@
 namespace Devi\Model;
 
 use DateTime;
+use Devi\Utils\Serializer;
 use JsonSerializable;
 
 class User implements JsonSerializable
@@ -93,12 +94,11 @@ class User implements JsonSerializable
   // Serialize to JSON
   public function jsonSerialize(): array
   {
-    return [
-      'name' => $this->getName(),
-      'email' => $this->getEmail(),
-      'date_created' => $this->getDateCreated()->format(DateTime::ISO8601),
-      'date_modified' => $this->getDateModified()->format(DateTime::ISO8601)
-    ];
+    return (new Serializer)
+      ->useTransient(['id','password','public_key','private_key'])
+      ->useStrategy('date_created',[Serializer::class,'dateTimeStrategy'])
+      ->useStrategy('date_modified',[Serializer::class,'dateTimeStrategy'])
+      ->serialize($this);
   }
 
   // Create a user

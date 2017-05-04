@@ -2,8 +2,8 @@
 namespace Devi\Model;
 
 use DateTime;
+use Devi\Utils\Serializer;
 use JsonSerializable;
-use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -132,16 +132,14 @@ class Image implements JsonSerializable
   {
     global $app;
     
-    return [
-      'name' => $this->getName(),
-      'file_name' => $this->getFileName(),
-      'file_mime_type' => $this->getFileMimeType(),
-      'file_size' => $this->getFileSize(),
-      'date_created' => $this->getDateCreated()->format(DateTime::ISO8601),
-      'date_modified' => $this->getDateModified()->format(DateTime::ISO8601),
-      'public' => $this->isPublic(),
-      'user' => $app['users.repository']->find($this->getUserId())
-    ];
+    return (new Serializer)
+      ->useTransient('id')
+      ->useStrategy('date_created',[Serializer::class,'dateTimeStrategy'])
+      ->useStrategy('date_modified',[Serializer::class,'dateTimeStrategy'])
+      ->useStrategy('user_id',function($user_id) use($app) {
+        return $app['users.repository']->find($user_id);
+      },'user')
+      ->serialize($this);
   }
   
   // Create an image
