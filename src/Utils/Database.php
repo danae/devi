@@ -87,10 +87,20 @@ class Database
       return null;
   
     // Return the results
-    if (count($results) === 1)
-      return $results[0];
+    if (empty($results))
+      return null;
     else
       return $results;
+  }
+  
+  // Select one
+  public function selectOne(string $table, array $where = [], string $order = '')
+  {
+    $results = $this->select($table,$where,$order);
+    if ($results === null)
+      return null;
+    else
+      return $results[0];
   }
   
   // Insert

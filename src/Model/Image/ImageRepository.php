@@ -24,8 +24,11 @@ class ImageRepository implements ImageRepositoryInterface
   // Gets an image from the repository
   public function find(string $id)
   {
-    $data = $this->database->select($this->table,['id' => $id]);
-    return $this->serializer->denormalize($data,Image::class);
+    $data = $this->database->selectOne($this->table,['id' => $id]);
+    if ($data === null)
+      return null;
+    else
+      return $this->serializer->denormalize($data,Image::class);
   }
   
   // Gets all images

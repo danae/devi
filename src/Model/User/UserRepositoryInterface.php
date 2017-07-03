@@ -4,13 +4,13 @@ namespace Devi\Model\User;
 interface UserRepositoryInterface
 {
   // Gets a user from the repository
-  public function find(string $name): User;
+  public function find(string $name);
   
   // Gets a user by name
-  public function findByName(string $name): User;
+  public function findByName(string $name);
   
   // Gets a user by public key
-  public function findByPublicKey(string $public_key): User;
+  public function findByPublicKey(string $public_key);
   
   // Gets all users
   public function findAll(): array;

@@ -16,7 +16,7 @@ class Authorization implements AuthorizationInterface
   }
   
   // Authorizes a request or throws an exception if failed
-  public function authorize(Request $request): void
+  public function authorize(Request $request)
   {
     // Get the Authorization and Date headers
     $auth_user = $request->getUser();
@@ -40,7 +40,7 @@ class Authorization implements AuthorizationInterface
   }
   
   // Optionally authorizes a request
-  public function optional(Request $request): void
+  public function optional(Request $request)
   {
     try
     {

@@ -21,24 +21,33 @@ class UserRepository implements UserRepositoryInterface
   }
   
   // Gets a user from the repository
-  public function find(string $name): User
+  public function find(string $name)
   {
-    $data = $this->database->select($this->table,['name' => $name]);
-    return $this->serializer->denormalize($data,User::class);
+    $data = $this->database->selectOne($this->table,['name' => $name]);
+    if ($data === null)
+      return null;
+    else
+      return $this->serializer->denormalize($data,User::class);
   }
   
   // Gets a user by name
-  public function findByName(string $name): User
+  public function findByName(string $name)
   {
-    $data = $this->database->select($this->table,['name' => $name]);
-    return $this->serializer->denormalize($data,User::class);
+    $data = $this->database->selectOne($this->table,['name' => $name]);
+    if ($data === null)
+      return null;
+    else
+      return $this->serializer->denormalize($data,User::class);
   }
   
   // Gets a user by public key
-  public function findByPublicKey(string $public_key): User
+  public function findByPublicKey(string $public_key)
   {
-    $data = $this->database->select($this->table,['public_key' => $public_key]);
-    return $this->serializer->denormalize($data,User::class);
+    $data = $this->database->selectOne($this->table,['public_key' => $public_key]);
+    if ($data === null)
+      return null;
+    else
+      return $this->serializer->denormalize($data,User::class);
   }
   
   // Gets all users
