@@ -16,7 +16,7 @@ class GzipWrapper implements StorageInterface
   }
   
   // Read the contents of a blob
-  public function read($index): string
+  public function read($index)
   {
     // Read the file from the storage
     $contents = $this->storage->read($index);
@@ -44,7 +44,7 @@ class GzipWrapper implements StorageInterface
   }
 
   // Write a string to a blob
-  public function write($index, $contents, $level = 9): void
+  public function write($index, $contents, $level = 9)
   {
     // Compress the contents
     $contents = gzencode($contents,$level);
@@ -54,7 +54,7 @@ class GzipWrapper implements StorageInterface
   }
   
   // Write a stream to a blob
-  public function writeStream($index, $stream, $level = 9): void
+  public function writeStream($index, $stream, $level = 9)
   {
     // Validate the stream
     if (!is_resource($stream))
@@ -68,7 +68,7 @@ class GzipWrapper implements StorageInterface
   }
   
   // Delete a blob
-  public function delete($index): void
+  public function delete($index)
   {
     // Pass delete to the storage
     $this->storage->delete($index);

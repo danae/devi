@@ -21,11 +21,11 @@ interface ImageRepositoryInterface
   public function findAllIds(): array;
   
   // Puts an image into the repository
-  public function create(Image $image): void;
+  public function create(Image $image);
   
   // Patches an image in the repository
-  public function update(Image $image): void;
+  public function update(Image $image);
   
   // Deletes an image from the repository
-  public function delete(Image $image): void;
+  public function delete(Image $image);
 }

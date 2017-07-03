@@ -20,7 +20,7 @@ class Flysystem implements StorageInterface
   }
   
   // Read the contents of a blob
-  public function read($index): string
+  public function read($index)
   {
     $path = sprintf($this->format,$index);
     
@@ -38,7 +38,7 @@ class Flysystem implements StorageInterface
   }
 
   // Write a string to a blob
-  public function write($index, $contents): void
+  public function write($index, $contents)
   {
     $path = sprintf($this->format,$index);
     
@@ -47,7 +47,7 @@ class Flysystem implements StorageInterface
   }
   
   // Write a stream to a blob
-  public function writeStream($index, $stream): void
+  public function writeStream($index, $stream)
   {
     $path = sprintf($this->format,$index);
     
@@ -60,7 +60,7 @@ class Flysystem implements StorageInterface
   }
   
   // Delete a blob
-  public function delete($index): void
+  public function delete($index)
   {
     $path = sprintf($this->format,$index);
     

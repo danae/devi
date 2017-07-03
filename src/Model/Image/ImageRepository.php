@@ -66,21 +66,21 @@ class ImageRepository implements ImageRepositoryInterface
   }
   
   // Puts an image into the repository
-  public function create(Image $image): void
+  public function create(Image $image)
   {
     $array = $this->serializer->normalize($image);
     $this->database->insert($this->table,$array);
   }
   
   // Patches an image in the repository
-  public function update(Image $image): void
+  public function update(Image $image)
   {
     $array = $this->serializer->normalize($image);
     $this->database->update($this->table,$array,['id' => $image->getId()]);
   }
   
   // Deletes an image from the repository
-  public function delete(Image $image): void
+  public function delete(Image $image)
   {
     $this->database->delete($this->table,['id' => $image->getId()]);
   }

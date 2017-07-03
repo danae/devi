@@ -67,21 +67,21 @@ class UserRepository implements UserRepositoryInterface
   }
   
   // Puts a user into the repository
-  public function create(User $user): void
+  public function create(User $user)
   {
     $array = $this->serializer->normalize($user);
     $this->database->insert($this->table,$array);
   }
   
   // Patches a user in the repository
-  public function update(User $user): void
+  public function update(User $user)
   {
     $array = $this->serializer->normalize($user);
     $this->database->update($this->table,$array,['id' => $user->getId()]);
   }
   
   // Deletes a user from the repository
-  public function delete(User $user): void
+  public function delete(User $user)
   {
     $this->database->delete($this->table,['id' => $user->getId()]);
   }
