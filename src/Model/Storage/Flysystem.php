@@ -1,7 +1,6 @@
 <?php
 namespace Devi\Model\Storage;
 
-use Devi\Model\StorageInterface;
 use League\Flysystem\Exception;
 use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\Response;

@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Model;
+namespace Devi\Model\Image;
 
 interface ImageRepositoryInterface
 {

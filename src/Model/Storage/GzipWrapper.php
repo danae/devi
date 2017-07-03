@@ -1,7 +1,6 @@
 <?php
 namespace Devi\Model\Storage;
 
-use Devi\Model\StorageInterface;
 use Exception;
 use Symfony\Component\HttpFoundation\Response;
 

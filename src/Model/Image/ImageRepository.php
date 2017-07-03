@@ -1,13 +1,9 @@
 <?php
-namespace Devi\Model;
+namespace Devi\Model\Image;
 
-use Devi\Serializer\BooleanStrategy;
-use Devi\Serializer\DateTimeStrategy;
-use Devi\Serializer\IntegerStrategy;
-use Devi\Serializer\Serializer;
 use Devi\Utils\Database;
-use Devi\Utils\Hydrator;
 use PDO;
+use Symfony\Component\Serializer\Serializer;
 
 class ImageRepository implements ImageRepositoryInterface
 {
@@ -17,51 +13,46 @@ class ImageRepository implements ImageRepositoryInterface
   private $serializer;
   
   // Constructor
-  public function __construct(Database $database, string $table)
+  public function __construct(Database $database, string $table, Serializer $serializer)
   {
-    $this->database = $database
-      ->useClass(Image::class)
-      ->useStrategy('date_created',[Hydrator::class,'dateTimeStrategy'])
-      ->useStrategy('date_modified',[Hydrator::class,'dateTimeStrategy'])
-      ->useStrategy('public',[Hydrator::class,'boolStrategy']);
+    $this->database = $database;
     $this->table = $table;
-    $this->serializer = (new Serializer)
-      ->withStrategy('id',new IntegerStrategy)
-      ->withStrategy('file_size',new IntegerStrategy)
-      ->withStrategy('date_created',new DateTimeStrategy)
-      ->withStrategy('date_modified',new DateTimeStrategy)
-      ->withStrategy('public',new BooleanStrategy)
-      ->withStrategy('user_id',new IntegerStrategy);
+    $this->serializer = $serializer;
   }
   
   // Gets an image from the repository
   public function find(int $id)
   {
-    return $this->database->select($this->table,['id' => $id]);
+    $data = $this->database->select($this->table,['id' => $id]);
+    return $this->serializer->denormalize($data,Image::class);
   }
   
   // Gets an image by name
   public function findByName(string $name)
   {
-    return $this->database->select($this->table,['name' => $name]);
+    $data = $this->database->select($this->table,['name' => $name]);
+    return $this->serializer->denormalize($data,Image::class);
   }
   
   // Gets all images
   public function findAll(): array
   {
-    return $this->database->select($this->table,[],['order by' => 'date_modified desc']);
+    $data = $this->database->select($this->table,[],['order by' => 'date_modified desc']);
+    return $this->serializer->denormalize($data,Image::class . '[]');
   }
   
   // Gets all images by user
   public function findAllByUser(User $user): array
   {
-    return $this->database->select($this->table,['user_id' => $user->getId()],['order by' => 'date_modified desc']);
+    $data = $this->database->select($this->table,['user_id' => $user->getId()],['order by' => 'date_modified desc']);
+    return $this->serializer->denormalize($data,Image::class . '[]');
   }
   
   // Gets all public images by user
   public function findAllPublicByUser(User $user): array
   {
-    return $this->database->select($this->table,['user_id' => $user->getId(),'public' => 1],['order by' => 'date_modified desc']);
+    $data = $this->database->select($this->table,['user_id' => $user->getId(),'public' => 1],['order by' => 'date_modified desc']);
+    return $this->serializer->denormalize($data,Image::class . '[]');
   }
   
   // Get all names as an array
@@ -115,10 +106,6 @@ class ImageRepository implements ImageRepositoryInterface
   // Deletes an image from the repository
   public function delete(Image $image): void
   {
-    $st = $this->database->prepare(
-      "DELETE FROM {$this->table}
-        WHERE id = :id");
-    $st->bindValue(':id',$image->getId());
-    $st->execute();
+    $this->database->delete($this->table,['id' => $image->getId()]);
   }
 }

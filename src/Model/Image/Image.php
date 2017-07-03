@@ -1,13 +1,11 @@
 <?php
-namespace Devi\Model;
+namespace Devi\Model\Image;
 
 use DateTime;
-use Devi\Utils\Serializer;
-use JsonSerializable;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
 
-class Image implements JsonSerializable
+class Image
 {
   // Variables
   private $id;
@@ -125,21 +123,6 @@ class Image implements JsonSerializable
     
     // Return the response
     return $response;
-  }
-  
-  // Serialize to JSON
-  public function jsonSerialize(): array
-  {
-    global $app;
-    
-    return (new Serializer)
-      ->useTransient('id')
-      ->useStrategy('date_created',[Serializer::class,'dateTimeStrategy'])
-      ->useStrategy('date_modified',[Serializer::class,'dateTimeStrategy'])
-      ->useStrategy('user_id',function($user_id) use($app) {
-        return $app['users.repository']->find($user_id);
-      },'user')
-      ->serialize($this);
   }
   
   // Create an image

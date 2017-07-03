@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Model;
+namespace Devi\Model\User;
 
 interface UserRepositoryInterface
 {

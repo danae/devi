@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Model;
+namespace Devi\Model\Storage;
 
 use Symfony\Component\HttpFoundation\Response;
 

@@ -1,11 +1,10 @@
 <?php
-namespace Devi\Model;
+namespace Devi\Model\User;
 
 use DateTime;
 use Devi\Utils\Serializer;
-use JsonSerializable;
 
-class User implements JsonSerializable
+class User
 {
   // Variables
   private $id;
