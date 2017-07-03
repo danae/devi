@@ -53,7 +53,7 @@ class UserRepository implements UserRepositoryInterface
   // Gets all users
   public function findAll(): array
   {
-    $data = $this->database->select($this->table,[],'date_modified desc');
+    $data = $this->database->select($this->table,[],'modified_at desc');
     return array_map(function($row) {
       return $this->serializer->denormalize($row,User::class);
     },$data);
