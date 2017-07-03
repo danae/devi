@@ -1,13 +1,12 @@
 <?php
 namespace Devi\Model\Image;
 
+use Devi\Model\User\User;
+
 interface ImageRepositoryInterface
 {
   // Gets an image from the repository
-  public function find(int $id);
-  
-  // Gets an image by name
-  public function findByName(string $name);
+  public function find(string $id);
   
   // Gets all images
   public function findAll(): array;
@@ -18,8 +17,8 @@ interface ImageRepositoryInterface
   // Gets all public images by user
   public function findAllPublicByUser(User $user): array;
   
-  // Gets all names as an array
-  public function findAllNames(): array;
+  // Gets all ids as an array
+  public function findAllIds(): array;
   
   // Puts an image into the repository
   public function create(Image $image): void;

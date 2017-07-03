@@ -2,39 +2,35 @@
 namespace Devi\Model\Image;
 
 use DateTime;
+use Devi\Model\Storage\StorageInterface;
+use Devi\Model\User\User;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\Normalizer\DenormalizableInterface;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-class Image
+class Image implements NormalizableInterface, DenormalizableInterface
 {
   // Variables
   private $id;
-  private $name;
   private $file_name;
-  private $file_mime_type;
-  private $file_size;
-  private $date_created;
-  private $date_modified;
+  private $content_type;
+  private $content_length;
+  private $created_at;
+  private $modified_at;
   private $public;
   private $user_id;
   
   // Management
-  public function getId(): int
+  public function getId(): string
   {
     return $this->id;
   }
-  public function setId(int $id): self
+  public function setId(string $id): self
   {
     $this->id = $id;
-    return $this;
-  }
-  public function getName(): string
-  {
-    return $this->name;
-  }
-  public function setName(string $name): self
-  {
-    $this->name = $name;
     return $this;
   }
   public function getFileName(): string
@@ -46,40 +42,40 @@ class Image
     $this->file_name = $file_name;
     return $this;
   }
-  public function getFileMimeType(): string
+  public function getContentType(): string
   {
-    return $this->file_mime_type;
+    return $this->content_type;
   }
-  public function setFileMimeType(string $file_mime_type): self
+  public function setContentType(string $content_type): self
   {
-    $this->file_mime_type = $file_mime_type;
+    $this->content_type = $content_type;
     return $this;
   }
-  public function getFileSize(): int
+  public function getContentLength(): int
   {
-    return $this->file_size;
+    return $this->content_length;
   }
-  public function setFileSize(int $file_size): self
+  public function setContentLength(int $content_length): self
   {
-    $this->file_size = $file_size;
+    $this->content_length = $content_length;
     return $this;
   }
-  public function getDateCreated(): DateTime
+  public function getCreatedAt(): DateTime
   {
-    return $this->date_created;
+    return $this->created_at;
   }
-  public function setDateCreated(DateTime $date_created): self
+  public function setCreatedAt(DateTime $created_at): self
   {
-    $this->date_created = $date_created;
+    $this->created_at = $created_at;
     return $this;
   }
-  public function getDateModified(): DateTime
+  public function getModifiedAt(): DateTime
   {
-    return $this->date_modified;
+    return $this->modified_at;
   }
-  public function setDateModified(DateTime $date_modified): self
+  public function setModifiedAt(DateTime $modified_at): self
   {
-    $this->date_modified = $date_modified;
+    $this->modified_at = $modified_at;
     return $this;
   }
   public function isPublic(): bool
@@ -101,25 +97,56 @@ class Image
     return $this;
   }
   
+  // Normalize the image for use in a database
+  public function normalize(NormalizerInterface $normalizer, $format = null, array $context = []): array
+  {
+    return [
+      'id' => $this->getId(),
+      'file_name' => $this->getFileName(),
+      'content_type' => $this->getContentType(),
+      'content_length' => (int)$this->getContentLength(),
+      'created_at' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
+      'modified_at' => $normalizer->normalize($this->getModifiedAt(),$format,$context),
+      'public' => (bool)$this->isPublic(),
+      'user_id' => (int)$this->getUserId()
+    ];
+  }
+  
+  // Denormalize the image
+  public function denormalize(DenormalizerInterface $denormalizer, $data, $format = null, array $context = []): Image
+  {
+    return $this
+      ->setId($data['id'])
+      ->setFileName($data['file_name'])
+      ->setContentType($data['content_type'])
+      ->setContentLength((int)$data['content_length'])
+      ->setCreatedAt($denormalizer->denormalize($data['created_at'],DateTime::class,$format,$context))
+      ->setModifiedAt($denormalizer->denormalize($data['modified_at'],DateTime::class,$format,$context))
+      ->setPublic((bool)$data['public'])
+      ->setUserId($data['user_id']);
+  }
+  
   // Post the raw image from an uploaded file
   public function upload(StorageInterface $storage, UploadedFile $file, $file_name = null): self
   {
     // Upload the file
-    $storage->writeStream($this->name,$file->openFile('rb'));
+    $stream = fopen($file->getPathname(),'rb');
+    $storage->writeStream($this->getId(),$stream);
+    fclose($stream);
     
     // Return the updated image
     return $this
-      ->setFileName($file_name ?? ($this->getFileName() ?? $file->getClientOriginalName()))
-      ->setFileMimeType($file->getMimeType())
-      ->setFileSize($file->getSize());
+      ->setFileName($file_name ?? ($file->getClientOriginalName() ?? $this->getFileName()))
+      ->setContentType($file->getMimeType())
+      ->setContentLength($file->getSize());
   }
   
   // Get the raw image as a BinaryFileResponse
   public function respond(StorageInterface $storage): Response
   {
     // Get the response from the storage
-    $response = $storage->respond($this->getName(),$this->getFileName(),$this->getFileMimeType());
-    $response->setLastModified($this->getDateModified());
+    $response = $storage->respond($this->getId(),$this->getFileName(),$this->getContentType());
+    $response->setLastModified($this->getModifiedAt());
     
     // Return the response
     return $response;
@@ -130,37 +157,37 @@ class Image
   {
     // Return the new image
     return (new Image)
+      ->setId(self::createId())
       ->setUserId($user->getId())
-      ->setName(self::createName())
-      ->setDateCreated(new DateTime)
-      ->setDateModified(new DateTime)
+      ->setCreatedAt(new DateTime)
+      ->setModifiedAt(new DateTime)
       ->setPublic(true);
   }
   
-  // Generate an image name
-  private static function createName($length = null): string
+  // Generate an image id
+  private static function createId($length = null): string
   {
     global $app;
     
     // Create pattern
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
     
-    // Get already occupied names
-    $occupied = $app['images.repository']->findAllNames();
+    // Get already occupied ids
+    $occupied = $app['images.repository']->findAllIds();
     $occupied_order = ceil(log(count($occupied),36)) + 1;
     
     // Set length
     if ($length == null)
       $length = max([$occupied_order + 1,5]);
     
-    // Generate a name
+    // Generate an id
     do {
       $generated = '0';
       for ($i = 1; $i < $length; $i ++)
         $generated .= $pattern[mt_rand(0,strlen($pattern)-1)];
     } while (in_array($generated,$occupied));
     
-    // Return the generated name
+    // Return the generated id
     return $generated;
   }
 }

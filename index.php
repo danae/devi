@@ -1,11 +1,11 @@
 <?php
 require "vendor/autoload.php";
 
+use Devi\App\ApplicationException;
 use Devi\App\ImageControllerProvider;
+use Devi\App\StorageControllerProvider;
 use Devi\App\UserControllerProvider;
 use Devi\Authorization\Authorization;
-use Devi\Model\Image\ImageDatabaseNormalizer;
-use Devi\Model\Image\ImageOutputNormalizer;
 use Devi\Model\Image\ImageRepository;
 use Devi\Model\Storage\Flysystem;
 use Devi\Model\Storage\GzipWrapper;
@@ -16,9 +16,8 @@ use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
+use Symfony\Component\Serializer\Normalizer\CustomNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -50,10 +49,11 @@ $app->after(function(Request $request, Response $response) {
   return $response;
 });
 
-// Add application exception handling
+// Add exception handling
 $app->error(function(Exception $ex) {
-  return new Response($ex,500);
-  //return new JsonResponse(['error' => $ex->getMessage()],500);
+  return new JsonResponse([
+    'error' => $ex->getMessage()
+  ],$ex instanceof ApplicationException ? $ex->getCode() : 500);
 });
 
 // Add support for CORS requests
@@ -66,11 +66,6 @@ $app['database'] = function($app) {
   return new Database("mysql:host=" . $app['db.server'] . ";dbname=" . $app['db.database'],$app['db.user'],$app['db.password']);
 };
 
-// Create authorization middleware
-$app['authorization'] = function() {
-  return new Authorization;
-};
-
 // Create the file system
 $app['storage'] = function($app) {
   $filesystem = new Filesystem($app['storage.backend']);
@@ -79,61 +74,37 @@ $app['storage'] = function($app) {
     new Flysystem($filesystem,"image-%s.gz"));
 };
 
-// Create serializer callbacks
-$app['callbacks.date'] = function($app) {
-  return function($dateTime) {
-    return $dateTime instanceof DateTime ? $dateTime->format(DateTime::ISO8601) : '';
-  };
-};
-$app['callbacks.user'] = function($app) {
-  return function($userId) use($app) {
-    return $app['users.repository']->find($userId);
-  };
+// Create the serializer
+$app['serializer'] = function() {
+  return new Serializer([new CustomNormalizer,new DateTimeNormalizer('Y-m-d H:i:s'),new ObjectNormalizer],[new JsonEncoder]);
 };
 
-// Create the user serializers
-$app['images.serializer.database'] = function() {
-  return new Serializer([new UserDatabaseNormalizer,new DateTimeNormalizer],[new JsonEncoder]);
-};
-$app['images.serializer.api'] = function() {
-  return new Serializer([new UserApiNormalizer,new DateTimeNormalizer],[new JsonEncoder]);
-};
-
-$app['users.serializer'] = function($app) {  
-  $objectNormalizer = new ObjectNormalizer(null,new CamelCaseToSnakeCaseNameConverter,null,new ReflectionExtractor);
-  $objectNormalizer->setIgnoredAttributes(['id','password','public_key','private_key']);
-  $objectNormalizer->setCallbacks(['dateCreated' => $app['callbacks.date'],'dateModified' => $app['callbacks.date']]);
-  
-  $jsonEncoder = new JsonEncoder;
-  
-  return new Serializer([$objectNormalizer],[$jsonEncoder]);
-};
-
-// Create the image serializers
-$app['images.serializer.database'] = function() {
-  return new Serializer([new ImageDatabaseNormalizer,new DateTimeNormalizer],[new JsonEncoder]);
-};
-$app['images.serializer.output'] = function() {
-  return new Serializer([new ImageOutputNormalizer,new DateTimeNormalizer],[new JsonEncoder]);
+// Create authorization
+$app['authorization'] = function($app) {
+  return new Authorization($app['users.repository']);
 };
 
 // Create the repositories and providers
 $app['users.repository'] = function($app) {
-  return new UserRepository($app['database'],'users',$app['users.serializer']);
+  return new UserRepository($app['database'],'users',$app['serializer']);
 };
 $app['users.provider'] = function($app) {
-  return new UserControllerProvider($app['users.repository'],$app['users.serializer']);
+  return new UserControllerProvider($app['authorization'],$app['users.repository'],$app['serializer']);
 };
 $app['images.repository'] = function($app) {
-  return new ImageRepository($app['database'],'images',$app['images.serializer.database']);
+  return new ImageRepository($app['database'],'images',$app['serializer']);
 };
 $app['images.provider'] = function($app) {
-  return new ImageControllerProvider($app['images.repository'],$app['images.serializer.output'],$app['storage']);
+  return new ImageControllerProvider($app['authorization'],$app['images.repository'],$app['serializer'],$app['storage']);
+};
+$app['storage.provider'] = function($app) {
+  return new StorageControllerProvider($app['storage']);
 };
 
 // Create the controllers
 $app->mount('/users',$app['users.provider']);
 $app->mount('/images',$app['images.provider']);
+//$app->mount('/images/{image}',$app['storage.provider']);
 
 // Run the application
 $app->run();

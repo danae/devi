@@ -22,7 +22,7 @@ class GzipWrapper implements StorageInterface
     $contents = $this->storage->read($index);
     
     // Uncompress the contents
-    $contents = gzuncompress($contents);
+    $contents = gzdecode($contents);
     
     // Return the contents
     return $contents;
@@ -47,7 +47,7 @@ class GzipWrapper implements StorageInterface
   public function write($index, $contents, $level = 9): void
   {
     // Compress the contents
-    $contents = gzcompress($contents,$level);
+    $contents = gzencode($contents,$level);
     
     // Write the contents to the storage
     $this->storage->write($index,$contents);

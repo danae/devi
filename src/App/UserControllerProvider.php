@@ -2,6 +2,7 @@
 namespace Devi\App;
 
 use DateTime;
+use Devi\Authorization\AuthorizationInterface;
 use Devi\Model\User\User;
 use Devi\Model\User\UserRepositoryInterface;
 use Silex\Api\ControllerProviderInterface;
@@ -13,12 +14,14 @@ use Symfony\Component\Serializer\Serializer;
 class UserControllerProvider implements ControllerProviderInterface
 {
   // Variables
+  private $authorization;
   private $repository;
   private $serializer;
   
   // Constructor
-  public function __construct(UserRepositoryInterface $repository, Serializer $serializer)
+  public function __construct(AuthorizationInterface $authorization, UserRepositoryInterface $repository, Serializer $serializer)
   {
+    $this->authorization = $authorization;
     $this->repository = $repository;
     $this->serializer = $serializer;
   }
@@ -35,7 +38,7 @@ class UserControllerProvider implements ControllerProviderInterface
   public function validateCurrent(User $user, Request $request)
   {
     // Check if the user is the owner of the image
-    if ($user->getId() !== $request->request->get('user')->getId())
+    if ($user->getName() !== $request->request->get('user')->getName())
       throw new ApplicationException('The specified user cannot be changed by this user',403);
   }
   
@@ -110,7 +113,7 @@ class UserControllerProvider implements ControllerProviderInterface
 
     // Replace the fields
     if ($request->request->has('name'))
-      $user->setName($request->request->get('name'));
+      $user->setFileName($request->request->get('name'));
     if ($request->request->has('email'))
       $user->setEmail($request->request->get('email'));
     if ($request->request->has('password'))
@@ -119,7 +122,7 @@ class UserControllerProvider implements ControllerProviderInterface
       $user->setPublic($request->request->get('public'));
 
     // Patch the updated user in the database
-    $this->repository->update($user->setDateModified(new DateTime));
+    $this->repository->update($user->setModifiedAt(new DateTime));
 
     // Return the user
     $json = $this->serializer->serialize($user,'json');
@@ -151,9 +154,15 @@ class UserControllerProvider implements ControllerProviderInterface
     
     // Return the images
     if ($this->checkCurrent($user,$request->request->get('user')))
-      return new JsonResponse($app['images.repository']->findAllByUser($user));
+    {
+      $json = $this->serializer->serialize($app['images.repository']->findAllByUser($user),'json');
+      return JsonResponse::fromJsonString($json);
+    }
     else
-      return new JsonResponse($app['images.repository']->findAllPublicByUser($user));
+    {
+      $json = $this->serializer->serialize($app['images.repository']->findAllPublicByUser($user),'json');
+      return JsonResponse::fromJsonString($json);
+    }
   }
   
   // Connect to the application
@@ -165,7 +174,7 @@ class UserControllerProvider implements ControllerProviderInterface
     // Create user collection routes
     $controllers
       ->get('/',[$this,'getAll'])
-      ->before('authorization:optional');
+      ->before([$this->authorization,'optional']);
 
     // Create user routes
     $controllers
@@ -173,21 +182,21 @@ class UserControllerProvider implements ControllerProviderInterface
     $controllers
       ->get('/{user}',[$this,'get'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before('authorization:optional');
+      ->before([$this->authorization,'optional']);
     $controllers
       ->patch('/{user}',[$this,'patch'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before('authorization:authorize');
+      ->before([$this->authorization,'authorize']);
     $controllers
       ->delete('/{user}',[$this,'delete'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before('authorization:authorize');
+      ->before([$this->authorization,'authorize']);
     
     // Create user images routes
     $controllers
       ->get('/{user}/images/',[$this,'getAllImages'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before('authorization:optional');
+      ->before([$this->authorization,'optional']);
     
     // Return the controllers
     return $controllers;

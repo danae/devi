@@ -2,6 +2,7 @@
 namespace Devi\Model\User;
 
 use Devi\Utils\Database;
+use PDO;
 use Symfony\Component\Serializer\Serializer;
 
 class UserRepository implements UserRepositoryInterface
@@ -20,9 +21,9 @@ class UserRepository implements UserRepositoryInterface
   }
   
   // Gets a user from the repository
-  public function find(int $id): User
+  public function find(string $name): User
   {
-    $data = $this->database->select($this->table,['id' => $id]);
+    $data = $this->database->select($this->table,['name' => $name]);
     return $this->serializer->denormalize($data,User::class);
   }
   
@@ -44,44 +45,30 @@ class UserRepository implements UserRepositoryInterface
   public function findAll(): array
   {
     $data = $this->database->select($this->table,[],['order by' => 'date_modified desc']);
-    return $this->serializer->denormalize($data,User::class . '[]');
+    return array_map(function($row) {
+      return $this->serializer->denormalize($row,User::class);
+    },$data);
+  }
+  
+  // Get all ids as an array
+  public function findAllIds(): array
+  {
+    $st = $this->database->query("SELECT name FROM {$this->table}");
+    return $st->fetchAll(PDO::FETCH_NUM);
   }
   
   // Puts a user into the repository
   public function create(User $user): void
   {
-    $st = $this->database->prepare(
-      "INSERT INTO {$this->table}
-        (id, name, email, password, public_key, private_key, date_created, date_modified)
-        VALUES NULL, :name, :email, :password, :public_key, :private_key, :date_created, :date_modified");
-    $st->execute([
-      ':name' => $user->getName(),
-      ':email' => $user->getEmail(),
-      ':password' => $user->getPassword(),
-      ':public_key' => $user->getPublicKey(),
-      ':private_key' => $user->getPrivateKey(),
-      ':date_created' => $user->getDateCreated(),
-      ':date_modified' => $user->getDateModified()
-    ]);
+    $array = $this->serializer->normalize($user);
+    $this->database->insert($this->table,$array);
   }
   
   // Patches a user in the repository
   public function update(User $user): void
   {
-    $st = $this->database->prepare(
-      "UPDATE {$this->table}
-        SET name = :name, email = :email, password = :password, public_key = :public_key, private_key = :private_key, date_created = :date_created, date_modified = :date_modified
-        WHERE id = :id");
-    $st->execute([
-      ':id' => $user->getId(),
-      ':name' => $user->getName(),
-      ':email' => $user->getEmail(),
-      ':password' => $user->getPassword(),
-      ':public_key' => $user->getPublicKey(),
-      ':private_key' => $user->getPrivateKey(),
-      ':date_created' => $user->getDateCreated(),
-      ':date_modified' => $user->getDateModified()
-    ]);
+    $array = $this->serializer->normalize($user);
+    $this->database->update($this->table,$array,['id' => $user->getId()]);
   }
   
   // Deletes a user from the repository

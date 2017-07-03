@@ -2,6 +2,7 @@
 namespace Devi\App;
 
 use DateTime;
+use Devi\Authorization\AuthorizationInterface;
 use Devi\Model\Image\Image;
 use Devi\Model\Image\ImageRepositoryInterface;
 use Devi\Model\Storage\StorageInterface;
@@ -14,13 +15,15 @@ use Symfony\Component\Serializer\Serializer;
 class ImageControllerProvider implements ControllerProviderInterface
 {
   // Variables
+  private $authorization;
   private $repository;
   private $serializer;
   private $storage;
   
   // Constructor
-  public function __construct(ImageRepositoryInterface $repository, Serializer $serializer, StorageInterface $storage)
+  public function __construct(AuthorizationInterface $authorization, ImageRepositoryInterface $repository, Serializer $serializer, StorageInterface $storage)
   {
+    $this->authorization = $authorization;
     $this->repository = $repository;
     $this->serializer = $serializer;
     $this->storage = $storage;
@@ -53,7 +56,7 @@ class ImageControllerProvider implements ControllerProviderInterface
       throw new ApplicationException('The request did not contain a file to upload',400);
     if (!$file->isValid())
       throw new ApplicationException('The specified file was not uploaded sucessfully: ' . $file->getErrorMessage(),400);
-    if (!array_key_exists($file->getMimeType(),$app['settings.mimetypes']))
+    if (!array_key_exists($file->getMimeType(),$app['mimetypes']))
       throw new ApplicationException('The type of the specified file is not supported',415);
     if ($file->getClientSize() > $file->getMaxFilesize())
       throw new ApplicationException('The specified file was too large; maximum size is ' . $file->getMaxFilesize(),413);
@@ -83,6 +86,26 @@ class ImageControllerProvider implements ControllerProviderInterface
     $json = $this->serializer->serialize($image,'json');
     return JsonResponse::fromJsonString($json,201);
   }
+  
+  // Replace an existing image
+  public function replace($image, Request $request)
+  {
+    // Validate the image
+    $this->validate($image);
+    $this->validateOwner($image,$request->request->get('user'));
+  
+    // Validate the file
+    $file = $request->files->get('file');
+    $this->validateFile($file);
+
+    // Replace the image
+    $image->upload($this->storage,$file);
+    $this->repository->update($image->setModifiedAt(new DateTime));
+    
+    // Return the image
+    $json = $this->serializer->serialize($image,'json');
+    return JsonResponse::fromJsonString($json);
+  }
 
   // Get an existing image
   public function get($image)
@@ -109,7 +132,7 @@ class ImageControllerProvider implements ControllerProviderInterface
       $image->setPublic((boolean)$request->request->get('public'));
   
     // Patch the updated image in the database
-    $this->repository->update($image);
+    $this->repository->update($image->setModifiedAt(new DateTime));
   
     // Return the image
     $json = $this->serializer->serialize($image,'json');
@@ -127,28 +150,8 @@ class ImageControllerProvider implements ControllerProviderInterface
     $this->repository->delete($image);
     
     // Delete the image from the storage
-    $this->filesystem->delete('image-' . $image->getName() . '.gz');
+    $this->storage->delete($image->getId());
   
-    // Return the image
-    $json = $this->serializer->serialize($image,'json');
-    return JsonResponse::fromJsonString($json);
-  }
-  
-  // Replace the raw data of an existing image
-  public function postRaw($image, Request $request)
-  {
-    // Validate the image
-    $this->validate($image);
-    $this->validateOwner($image,$request->request->get('user'));
-  
-    // Validate the file
-    $file = $request->files->get('file');
-    $this->validateFile($file);
-
-    // Replace the image
-    $image->upload($this->filesystem,$file);
-    $this->repository->update($image->setDateModified(new DateTime));
-    
     // Return the image
     $json = $this->serializer->serialize($image,'json');
     return JsonResponse::fromJsonString($json);
@@ -173,34 +176,35 @@ class ImageControllerProvider implements ControllerProviderInterface
     // Create image collection routes
     $controllers
       ->get('/',[$this,'getAll'])
-      ->before('authorization:optional');
+      ->before([$this->authorization,'optional']);
 
     // Create image routes
     $controllers
       ->post('/',[$this,'post'])
-      ->before('authorization:authorize');
+      ->before([$this->authorization,'authorize']);
+    $controllers
+      ->post('/{image}',[$this,'replace'])
+      ->convert('image',[$this->repository,'find'])
+      ->before([$this->authorization,'authorize']);
     $controllers
       ->get('/{image}',[$this,'get'])
-      ->convert('image',[$this->repository,'findByName'])
-      ->before('authorization:optional');
+      ->convert('image',[$this->repository,'find'])
+      ->before([$this->authorization,'optional']);
     $controllers
       ->patch('/{image}',[$this,'patch'])
-      ->convert('image',[$this->repository,'findByName'])
-      ->before('authorization:authorize');
+      ->convert('image',[$this->repository,'find'])
+      ->before([$this->authorization,'authorize']);
     $controllers
       ->delete('/{image}',[$this,'delete'])
-      ->convert('image',[$this->repository,'findByName'])
-      ->before('authorization:authorize');
-
+      ->convert('image',[$this->repository,'find'])
+      ->before([$this->authorization,'authorize']);
+    
+    
     // Create raw image routes
     $controllers
-      ->post('/{image}/raw',[$this,'postRaw'])
-      ->convert('image',[$this->repository,'findByName'])
-      ->before('authorization:authorize');
-    $controllers
       ->get('/{image}/raw',[$this,'getRaw'])
-      ->convert('image',[$this->repository,'findByName'])
-      ->before('authorization:optional');
+      ->convert('image',[$this->repository,'find'])
+      ->before([$this->authorization,'optional']);
     
     // Return the controllers
     return $controllers;

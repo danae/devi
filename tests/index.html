@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Devi tests</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      div#output {
+        font-family: monospace;
+        border: 1px #999 solid;
+      }
+      div#output p {
+        margin: 0;
+        padding: 4px;
+      }
+      div#output p:nth-child(even)
+      {
+        background-color: #DDD;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <form id="upload">
+      <p>
+        Select a file to upload: 
+        <input type="file" id="file">
+        <button type="submit">Upload</button>
+      </p>
+    </form>
+
+    <div id="output"></div>
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script>
+      $('#upload').submit(function(e) {
+        e.preventDefault();
+        
+        $.ajaxSetup({
+          async: false,
+          success: function(data) {
+            $('#output').append("<p>" + JSON.stringify(data) + "</p>");
+            console.log(data);
+          },
+          error: function(xhr) {
+            $('#output').append("<p>" + xhr.responseText + "</p>");
+            console.log(xhr.responseText);
+          }
+        });
+        
+        // Create a user
+        $.ajax({
+          method: 'POST',
+          url: '../users/',
+          data: {name: 'devi', email: 'info@devi.im', password: '1234'}
+        });
+        
+        // Get a user
+        $.ajax({
+          method: 'GET',
+          url: '../users/devi'
+        });
+        
+        // Patch a user
+        $.ajax({
+          method: 'PATCH',
+          url: '../users/devi',
+          data: {email: 'support@devi.im'},
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
+          },
+        });
+        
+        // Create an image
+        var image;
+        var fd = new FormData();
+        fd.append('file',document.getElementById('file').files[0]);
+        $.ajax({
+          method: 'POST',
+          url: '../images/',
+          data: fd,
+          processData: false,
+          contentType: false,
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
+          }
+        }).done(function(data) {
+          // Get an image
+          $.ajax({
+            method: 'GET',
+            url: '../images/' + data.id
+          });
+        
+          // Patch an image
+          $.ajax({
+            method: 'PATCH',
+            url: '../images/' + data.id,
+            data: {file_name: 'Devi.png'},
+            beforeSend: function(xhr) {
+              xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
+            }
+          });
+          
+          // Delete an image
+          $.ajax({
+            method: 'DELETE',
+            url: '../images/' + data.id,
+            beforeSend: function(xhr) {
+              xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
+            }
+          });
+        });
+        
+        // Delete a user
+        $.ajax({
+          method: 'DELETE',
+          url: '../users/devi',
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

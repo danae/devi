@@ -23,32 +23,34 @@ class Database
     return call_user_func_array([$this->pdo,$method],$args);
   }
   
-  // Create an update string
-  private function createUpdateString(array $where)
+  // Crete an insert query
+  private function createInsertQuery(string $table, array $object)
   {
-    return implode(", ",array_map(function($k, $v) {
-      return $k . ' = :' . $k;
-    },array_keys($where),$where));
+    return "insert into {$table} (" . implode(", ",array_map(function($k) {
+      return "`$k`";
+    },array_keys($object))) . ") values (" . implode(", ",array_map(function($k) {
+      return ":{$k}";
+    },array_keys($object))) . ")";
+  }
+  
+  // Create an update query
+  private function createUpdateQuery(string $table, array $object)
+  {
+    return "update {$table} set " . implode(", ",array_map(function($k) {
+      return "`{$k}` = :{$k}";
+    },array_keys($object)));
   }
   
   // Create a where string
   private function createWhereString(array $where)
   {
     return implode(" and ",array_map(function($k, $v) {
-      return $k . ' = :' . $k;
+      return "`{$k}` = :{$k}";
     },array_keys($where),$where));
   }
   
-  // Create an options string
-  private function createOptionsString(array $options)
-  {
-    return implode(' ',array_map(function($k,$v){
-      return $k . ' ' . $v;
-    },array_keys($options),$options));
-  }
-  
   // Prepare and bind a statement
-  private function prepareAndExecute(string $query, array $array = [])
+  private function bind(string $query, array $array = [])
   {
     // Prepare the statement
     $st = $this->prepare($query);
@@ -62,28 +64,22 @@ class Database
         $st->bindValue(":{$k}",$v);
     }
     
-    // Execute the statement
-    $st->execute();
-    
     // Return the statement
     return $st;
   }
   
   // Select
-  public function select(string $table, array $where = [], array $options = [])
+  public function select(string $table, array $where = [], string $order = '')
   {
     $query = "select * from {$table}";
-    
-    // Where clause
     if (!empty($where))
       $query .= " where " . $this->createWhereString($where);
-            
-    // Options
-    if (!empty($options))
-      $query .= " " . $this->createOptionsString($options);
+    if (!empty($order))
+      $query .= " order by " . $order;
     
     // Execute the query
-    $st = $this->prepareAndExecute($query,$where);
+    $st = $this->bind($query,$where);
+    $st->execute();
     
     // Get the results
     $results = $st->fetchAll(PDO::FETCH_ASSOC);
@@ -98,71 +94,48 @@ class Database
   }
   
   // Insert
-  public function insert(string $table, $object, array $options = [])
+  public function insert(string $table, array $object)
   {
-    $array = $this;
+    $query = $this->createInsertQuery($table,$object);
     
-    $query = "insert into {$table}";
-    
-    implode(", ",array_keys($object));
+    // Execute the query
+    $st = $this->bind($query,$object);    
+    $st->execute();
     
     // Return the amount of inserted rows
     return $st->rowCount();
   }
   
   // Update
-  public function update(string $table, array $object, array $where, array $options = [])
+  public function update(string $table, array $object, array $where)
   {
-    $query = "update {$table}";
-    $query .= " set " . $this->createUpdateString($object);
+    // Where keys stay the same
+    foreach ($where as $k => $v)
+      if (array_key_exists($k,$object))
+        unset($object[$k]);
     
-    // Where clause
+    $query = $this->createUpdateQuery($table,$object);
     if (!empty($where))
       $query .= " where " . $this->createWhereString($where);
-            
-    // Options
-    if (!empty($options))
-      $query .= " " . $this->createOptionsString($options);
     
-    // Prepare the statement
-    $st = $this->prepare($query);
-    foreach ($where as $k => $v)
-      $st->bindValue(':' . $k,$v);
+    // Execute the query
+    $st = $this->bind($query,array_merge($object,$where));
     $st->execute();
-    
-    $st = $this->prepareAndExecute(
-      "UPDATE {$this->table}
-        SET name = :name, email = :email, password = :password, public_key = :public_key, private_key = :private_key, date_created = :date_created, date_modified = :date_modified
-        WHERE id = :id",[
-      ':id' => $user->getId(),
-      ':name' => $user->getName(),
-      ':email' => $user->getEmail(),
-      ':password' => $user->getPassword(),
-      ':public_key' => $user->getPublicKey(),
-      ':private_key' => $user->getPrivateKey(),
-      ':date_created' => $user->getDateCreated(),
-      ':date_modified' => $user->getDateModified()
-    ]);
     
     // Return the amount of updated rows
     return $st->rowCount();
   }
   
   // Delete
-  public function delete(string $table, array $where, array $options = [])
+  public function delete(string $table, array $where)
   {
     $query = "delete from {$table}";
-    
-    // Where clause
     if (!empty($where))
       $query .= " where " . $this->createWhereString($where);
-            
-    // Options
-    if (!empty($options))
-      $query .= " " . $this->createOptionsString($options);
     
-    // Prepare the statement
-    $st = $this->prepareAndExecute($query,$where);
+    // Execute the query
+    $st = $this->bind($query,$where);
+    $st->execute();
     
     // Return the amount of deleted rows
     return $st->rowCount();
