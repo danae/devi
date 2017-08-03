@@ -75,7 +75,7 @@ class User implements NormalizableInterface
     return $this;
   }
   
-  // Normalize the user for use in a database
+  // Normalize the user for a response
   public function normalize(NormalizerInterface $normalizer, $format = null, array $context = []): array
   {
     return [
@@ -97,7 +97,7 @@ class User implements NormalizableInterface
       throw new PreconditionFailedHttpException('User name already in use');
     
     // Return the new user
-    return (new User)
+    return (new self)
       ->setName($name)
       ->setEmail($email)
       ->setPassword($password)

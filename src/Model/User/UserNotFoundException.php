@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Model\Image;
+namespace Devi\Model\User;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

@@ -20,12 +20,12 @@ interface ImageRepositoryInterface
   // Get all ids as an array
   public function findAllIds(): array;
   
-  // Create a image in the repository
+  // Create an image in the repository
   public function create(Image $image);
   
-  // Update a image in the repository
+  // Update an image in the repository
   public function update(Image $image);
   
-  // Delete a image from the repository
+  // Delete an image from the repository
   public function delete(Image $image);
 }

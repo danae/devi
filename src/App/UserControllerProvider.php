@@ -2,7 +2,6 @@
 namespace Devi\App;
 
 use DateTime;
-use Devi\Authorization\AuthorizationInterface;
 use Devi\Model\User\User;
 use Devi\Model\User\UserRepositoryInterface;
 use Silex\Api\ControllerProviderInterface;
@@ -16,14 +15,12 @@ use Symfony\Component\Serializer\Serializer;
 class UserControllerProvider implements ControllerProviderInterface
 {
   // Variables
-  private $authorization;
   private $repository;
   private $serializer;
   
   // Constructor
-  public function __construct(AuthorizationInterface $authorization, UserRepositoryInterface $repository, Serializer $serializer)
+  public function __construct(UserRepositoryInterface $repository, Serializer $serializer)
   {
-    $this->authorization = $authorization;
     $this->repository = $repository;
     $this->serializer = $serializer;
   }
@@ -154,13 +151,16 @@ class UserControllerProvider implements ControllerProviderInterface
   // Connect to the application
   public function connect(Application $app)
   {
+    // Get the authorization
+    $authorization = $app['authorization'];
+    
     // Create controllers
     $controllers = $app['controllers_factory'];
     
     // Create user collection routes
     $controllers
       ->get('/',[$this,'getAll'])
-      ->before([$this->authorization,'optional']);
+      ->before([$authorization,'optional']);
 
     // Create user routes
     $controllers
@@ -168,21 +168,21 @@ class UserControllerProvider implements ControllerProviderInterface
     $controllers
       ->get('/{user}',[$this,'get'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before([$this->authorization,'optional']);
+      ->before([$authorization,'optional']);
     $controllers
       ->patch('/{user}',[$this,'patch'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before([$this->authorization,'authorize']);
+      ->before([$authorization,'authorize']);
     $controllers
       ->delete('/{user}',[$this,'delete'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before([$this->authorization,'authorize']);
+      ->before([$authorization,'authorize']);
     
     // Create user images routes
     $controllers
       ->get('/{user}/images/',[$this,'getAllImages'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before([$this->authorization,'optional']);
+      ->before([$authorization,'optional']);
     
     // Return the controllers
     return $controllers;

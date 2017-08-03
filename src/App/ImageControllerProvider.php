@@ -2,7 +2,6 @@
 namespace Devi\App;
 
 use DateTime;
-use Devi\Authorization\AuthorizationInterface;
 use Devi\Model\Image\Image;
 use Devi\Model\Image\ImageRepositoryInterface;
 use Devi\Storage\StorageInterface;
@@ -19,15 +18,13 @@ use Symfony\Component\Serializer\Serializer;
 class ImageControllerProvider implements ControllerProviderInterface
 {
   // Variables
-  private $authorization;
   private $repository;
   private $serializer;
   private $storage;
   
   // Constructor
-  public function __construct(AuthorizationInterface $authorization, ImageRepositoryInterface $repository, Serializer $serializer, StorageInterface $storage)
+  public function __construct(ImageRepositoryInterface $repository, Serializer $serializer, StorageInterface $storage)
   {
-    $this->authorization = $authorization;
     $this->repository = $repository;
     $this->serializer = $serializer;
     $this->storage = $storage;
@@ -117,8 +114,8 @@ class ImageControllerProvider implements ControllerProviderInterface
     $this->validateOwner($image,$request->request->get('user'));
   
     // Replace the fields
-    if ($request->request->has('file_name'))
-      $image->setFileName($request->request->get('file_name'));
+    if ($request->request->has('name'))
+      $image->setName($request->request->get('name'));
     if ($request->request->has('public'))
       $image->setPublic((boolean)$request->request->get('public'));
   
@@ -157,41 +154,44 @@ class ImageControllerProvider implements ControllerProviderInterface
   // Connect to the application
   public function connect(Application $app)
   {    
+    // Get the authorization
+    $authorization = $app['authorization'];
+
     // Create controllers
     $controllers = $app['controllers_factory'];
     
     // Create image collection routes
     $controllers
       ->get('/',[$this,'getAll'])
-      ->before([$this->authorization,'optional']);
+      ->before([$authorization,'optional']);
 
     // Create image routes
     $controllers
       ->post('/',[$this,'post'])
-      ->before([$this->authorization,'authorize']);
+      ->before([$authorization,'authorize']);
     $controllers
       ->post('/{image}',[$this,'replace'])
       ->convert('image',[$this->repository,'find'])
-      ->before([$this->authorization,'authorize']);
+      ->before([$authorization,'authorize']);
     $controllers
       ->get('/{image}',[$this,'get'])
       ->convert('image',[$this->repository,'find'])
-      ->before([$this->authorization,'optional']);
+      ->before([$authorization,'optional']);
     $controllers
       ->patch('/{image}',[$this,'patch'])
       ->convert('image',[$this->repository,'find'])
-      ->before([$this->authorization,'authorize']);
+      ->before([$authorization,'authorize']);
     $controllers
       ->delete('/{image}',[$this,'delete'])
       ->convert('image',[$this->repository,'find'])
-      ->before([$this->authorization,'authorize']);
+      ->before([$authorization,'authorize']);
     
     
     // Create raw image routes
     $controllers
       ->get('/{image}/raw',[$this,'getRaw'])
       ->convert('image',[$this->repository,'find'])
-      ->before([$this->authorization,'optional']);
+      ->before([$authorization,'optional']);
     
     // Return the controllers
     return $controllers;

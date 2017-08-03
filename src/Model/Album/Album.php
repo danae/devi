@@ -1,17 +1,14 @@
 <?php
-namespace Devi\Model\Image;
+namespace Devi\Model\Album;
 
 use DateTime;
 use Devi\Model\ModifiableTrait;
 use Devi\Model\OwnableTrait;
 use Devi\Model\User\User;
-use Devi\Storage\StorageInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-class Image implements NormalizableInterface
+class Album implements NormalizableInterface
 {
   use ModifiableTrait;
   use OwnableTrait;
@@ -19,8 +16,6 @@ class Image implements NormalizableInterface
   // Variables
   private $id;
   private $name;
-  private $contentType;
-  private $contentLength;
   private $public;
   
   // Management
@@ -42,24 +37,6 @@ class Image implements NormalizableInterface
     $this->name = $name;
     return $this;
   }
-  public function getContentType(): string
-  {
-    return $this->contentType;
-  }
-  public function setContentType(string $contentType): self
-  {
-    $this->contentType = $contentType;
-    return $this;
-  }
-  public function getContentLength(): int
-  {
-    return $this->contentLength;
-  }
-  public function setContentLength(int $contentLength): self
-  {
-    $this->contentLength = $contentLength;
-    return $this;
-  }
   public function isPublic(): bool
   {
     return $this->public;
@@ -70,7 +47,7 @@ class Image implements NormalizableInterface
     return $this;
   }
   
-  // Normalize the image for a response
+  // Normalize the album for a response
   public function normalize(NormalizerInterface $normalizer, $format = null, array $context = []): array
   {
     global $app;
@@ -78,8 +55,6 @@ class Image implements NormalizableInterface
     return [
       'id' => $this->getId(),
       'name' => $this->getName(),
-      'contentType' => $this->getContentType(),
-      'contentLength' => (int)$this->getContentLength(),
       'createdAt' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
       'modifiedAt' => $normalizer->normalize($this->getModifiedAt(),$format,$context),
       'public' => (bool)$this->isPublic(),
@@ -87,45 +62,20 @@ class Image implements NormalizableInterface
     ];
   }
   
-  // Post the raw file from an uploaded file
-  public function upload(StorageInterface $storage, UploadedFile $file, $name = null): self
-  {
-    // Upload the file
-    $stream = fopen($file->getPathname(),'rb');
-    $storage->writeStream($this->getId(),$stream);
-    fclose($stream);
-    
-    // Return the updated file
-    return $this
-      ->setName($name ?? ($file->getClientOriginalName() ?? $this->getName()))
-      ->setContentType($file->getMimeType())
-      ->setContentLength($file->getSize());
-  }
-  
-  // Get the raw file as a BinaryFileResponse
-  public function respond(StorageInterface $storage): Response
-  {
-    // Get the response from the storage
-    $response = $storage->respond($this->getId(),$this->getName(),$this->getContentType());
-    $response->setLastModified($this->getModifiedAt());
-    
-    // Return the response
-    return $response;
-  }
-  
-  // Create an image
+  // Create an album
   public static function create(User $user): self
   {
     // Return the new file
     return (new self)
       ->setId(self::createId())
+      ->setName($user->getName() . '\'s album')
       ->setUserId($user->getId())
       ->setCreatedAt(new DateTime)
       ->setModifiedAt(new DateTime)
       ->setPublic(true);
   }
   
-  // Generate an image identifier
+  // Generate an album identifier
   private static function createId($length = null): string
   {
     global $app;
@@ -134,7 +84,7 @@ class Image implements NormalizableInterface
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
     
     // Get already occupied ids
-    $occupied = $app['images.repository']->findAllIds();
+    $occupied = $app['albums.repository']->findAllIds();
     $occupied_order = ceil(log(count($occupied),36)) + 1;
     
     // Set length
@@ -143,7 +93,7 @@ class Image implements NormalizableInterface
     
     // Generate an id
     do {
-      $generated = '0';
+      $generated = '1';
       for ($i = 1; $i < $length; $i ++)
         $generated .= $pattern[mt_rand(0,strlen($pattern)-1)];
     } while (in_array($generated,$occupied));

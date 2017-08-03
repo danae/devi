@@ -1,10 +1,12 @@
 <?php
 require "vendor/autoload.php";
 
+use Devi\App\AlbumControllerProvider;
 use Devi\App\ImageControllerProvider;
 use Devi\App\StorageControllerProvider;
 use Devi\App\UserControllerProvider;
 use Devi\Authorization\Authorization;
+use Devi\Model\Album\AlbumRepository;
 use Devi\Model\Image\ImageRepository;
 use Devi\Model\User\UserRepository;
 use Devi\Storage\Flysystem;
@@ -47,14 +49,15 @@ $app->after(function(Request $request, Response $response) {
 $app->error(function(Exception $ex) {
   return new JsonResponse([
     'error' => $ex->getMessage(),
-    'exceptionThrown' => get_class($ex)
+    'exceptionThrown' => get_class($ex),
+    'trace' => $ex->getTraceAsString()
   ],$ex instanceof HttpException ? $ex->getStatusCode() : 500);
 });
 
 // Add support for CORS requests
 $app->register(new CorsServiceProvider(),[
   'cors.allowHeaders' => 'Origin, Content-Type, Accept, Authorization, X-Requested-With',
-  'cors.allowMethods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+  'cors.allowMethods' => 'GET, POST, PATCH, DELETE, OPTIONS'
 ]);
 
 // Create the database service
@@ -91,19 +94,31 @@ $app['imagine.utils'] = function($app) {
   return new ImagineUtils($app['imagine'],$app['mimetypes']);
 };
 
-// Create the repositories and providers
+// Create the user provider
 $app['users.repository'] = function($app) {
   return new UserRepository($app['database'],'users',$app['serializer']);
 };
 $app['users.provider'] = function($app) {
-  return new UserControllerProvider($app['authorization'],$app['users.repository'],$app['serializer.display']);
+  return new UserControllerProvider($app['users.repository'],$app['serializer.display']);
 };
+
+// Create the image provider
 $app['images.repository'] = function($app) {
   return new ImageRepository($app['database'],'images',$app['serializer']);
 };
 $app['images.provider'] = function($app) {
-  return new ImageControllerProvider($app['authorization'],$app['images.repository'],$app['serializer.display'],$app['storage']);
+  return new ImageControllerProvider($app['images.repository'],$app['serializer.display'],$app['storage']);
 };
+
+// Create the album provider
+$app['albums.repository'] = function($app) {
+  return new AlbumRepository($app['database'],'albums',$app['serializer']);
+};
+$app['albums.provider'] = function($app) {
+  return new AlbumControllerProvider($app['albums.repository'],$app['serializer.display']);
+};
+
+// Create the storage provider
 $app['storage.provider'] = function($app) {
   return new StorageControllerProvider($app['images.repository'],$app['storage']);
 };
@@ -111,6 +126,7 @@ $app['storage.provider'] = function($app) {
 // Create the controllers
 $app->mount('/users',$app['users.provider']);
 $app->mount('/images',$app['images.provider']);
+$app->mount('/albums',$app['albums.provider']);
 $app->mount('/images/{image}',$app['storage.provider']);
 
 // Run the application

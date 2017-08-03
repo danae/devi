@@ -72,7 +72,6 @@
         });
         
         // Create an image
-        var image;
         var fd = new FormData();
         fd.append('file',document.getElementById('file').files[0]);
         $.ajax({
@@ -84,27 +83,62 @@
           beforeSend: function(xhr) {
             xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
           }
-        }).done(function(data) {
+        }).done(function(image) {
           // Get an image
           $.ajax({
             method: 'GET',
-            url: '../images/' + data.id
+            url: '../images/' + image.id
           });
         
           // Patch an image
           $.ajax({
             method: 'PATCH',
-            url: '../images/' + data.id,
-            data: {fileName: 'Devi.png'},
+            url: '../images/' + image.id,
+            data: {name: 'Devi.png', public: false},
             beforeSend: function(xhr) {
               xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
             }
           });
           
+          // Create an album
+          $.ajax({
+            method: 'POST',
+            url: '../albums/',
+            data: {name: 'Uploaded Images', public: false},
+            beforeSend: function(xhr) {
+              xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
+            }
+          }).done(function(album) {
+            // Get an album
+            $.ajax({
+              method: 'GET',
+              url: '../albums/' + album.id
+            });
+            
+            // Patch an album
+            $.ajax({
+              method: 'PATCH',
+              url: '../albums/' + album.id,
+              data: {name: 'New Album', public: true},
+              beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
+              }
+            });
+             
+            // Delete an album
+            $.ajax({
+              method: 'DELETE',
+              url: '../albums/' + album.id,
+              beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
+              }
+            });
+          });
+          
           // Delete an image
           $.ajax({
             method: 'DELETE',
-            url: '../images/' + data.id,
+            url: '../images/' + image.id,
             beforeSend: function(xhr) {
               xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
             }

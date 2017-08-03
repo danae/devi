@@ -88,7 +88,7 @@ class Database
   
     // Return the results
     if (empty($results))
-      return null;
+      return [];
     else
       return $results;
   }

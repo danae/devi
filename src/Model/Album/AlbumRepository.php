@@ -1,12 +1,12 @@
 <?php
-namespace Devi\Model\Image;
+namespace Devi\Model\Album;
 
 use Devi\Model\User\User;
 use Devi\Utils\Database;
 use PDO;
 use Symfony\Component\Serializer\Serializer;
 
-class ImageRepository implements ImageRepositoryInterface
+class AlbumRepository implements AlbumRepositoryInterface
 {
   // Variables
   private $database;
@@ -21,40 +21,40 @@ class ImageRepository implements ImageRepositoryInterface
     $this->serializer = $serializer;
   }
   
-  // Get an image from the repository
-  public function find(string $id): Image
+  // Get an album from the repository
+  public function find(string $id): Album
   {
     $data = $this->database->selectOne($this->table,['id' => $id]);
     if ($data === null)
-      throw new ImageNotFoundException($id);
+      throw new AlbumNotFoundException($id);
     else
-      return $this->serializer->denormalize($data,Image::class);
+      return $this->serializer->denormalize($data,Album::class);
   }
   
-  // Get all images
+  // Get all albums
   public function findAll(): array
   {
     $data = $this->database->select($this->table,[],'modifiedAt desc');
     return array_map(function($row) {
-      return $this->serializer->denormalize($row,Image::class);
+      return $this->serializer->denormalize($row,Album::class);
     },$data);
   }
   
-  // Get all images by user
+  // Get all albums by user
   public function findAllByUser(User $user): array
   {
     $data = $this->database->select($this->table,['userId' => $user->getId()],'modifiedAt desc');
     return array_map(function($row) {
-      return $this->serializer->denormalize($row,Image::class);
+      return $this->serializer->denormalize($row,Album::class);
     },$data);
   }
   
-  // Get all public images by user
+  // Get all public albums by user
   public function findAllPublicByUser(User $user): array
   {
     $data = $this->database->select($this->table,['userId' => $user->getId(),'public' => 1],'modifiedAt desc');
     return array_map(function($row) {
-      return $this->serializer->denormalize($row,Image::class);
+      return $this->serializer->denormalize($row,Album::class);
     },$data);
   }
   
@@ -65,23 +65,23 @@ class ImageRepository implements ImageRepositoryInterface
     return $st->fetchAll(PDO::FETCH_NUM);
   }
   
-  // Create an image in the repository
-  public function create(Image $image)
+  // Create an album in the repository
+  public function create(Album $album)
   {
-    $array = $this->serializer->normalize($image);
+    $array = $this->serializer->normalize($album);
     $this->database->insert($this->table,$array);
   }
   
-  // Update an image in the repository
-  public function update(Image $image)
+  // Update an album in the repository
+  public function update(Album $album)
   {
-    $array = $this->serializer->normalize($image);
-    $this->database->update($this->table,$array,['id' => $image->getId()]);
+    $array = $this->serializer->normalize($album);
+    $this->database->update($this->table,$array,['id' => $album->getId()]);
   }
   
-  // Delete an image from the repository
-  public function delete(Image $image)
+  // Delete an album from the repository
+  public function delete(Album $album)
   {
-    $this->database->delete($this->table,['id' => $image->getId()]);
+    $this->database->delete($this->table,['id' => $album->getId()]);
   }
 }
