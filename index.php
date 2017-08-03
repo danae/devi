@@ -1,7 +1,6 @@
 <?php
 require "vendor/autoload.php";
 
-use Devi\App\ApplicationException;
 use Devi\App\ImageControllerProvider;
 use Devi\App\StorageControllerProvider;
 use Devi\App\UserControllerProvider;
@@ -44,18 +43,12 @@ $app->after(function(Request $request, Response $response) {
   return $response;
 });
 
-// Add exception handling
-$app->error(function(HttpException $ex) {
-  return new JsonResponse([
-    'error' => $ex->getMessage(),
-    'type' => get_class($ex)
-  ],$ex->getStatusCode());
-});
+// Add exception handlingE
 $app->error(function(Exception $ex) {
   return new JsonResponse([
     'error' => $ex->getMessage(),
-    'type' => get_class($ex)
-  ],$ex instanceof ApplicationException ? $ex->getCode() : 500);
+    'exceptionThrown' => get_class($ex)
+  ],$ex instanceof HttpException ? $ex->getStatusCode() : 500);
 });
 
 // Add support for CORS requests

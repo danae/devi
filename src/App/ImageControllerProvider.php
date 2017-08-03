@@ -10,6 +10,10 @@ use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\UnsupportedMediaTypeHttpException;
 use Symfony\Component\Serializer\Serializer;
 
 class ImageControllerProvider implements ControllerProviderInterface
@@ -29,22 +33,14 @@ class ImageControllerProvider implements ControllerProviderInterface
     $this->storage = $storage;
   }
   
-  // Validate an image
-  public function validate($image)
-  {  
-    // Check if the image exists
-    if ($image === null)
-      throw new ApplicationException('The specified image was not found',404);
-  }
-  
   // Validate the owner of an image
   public function validateOwner(Image $image, $authorized)
   {
     // Check if the user is the owner of the image
     if ($authorized === null)
-      throw new ApplicationException('The specified image cannot be changed',403);
+      throw new AccessDeniedHttpException('The specified image cannot be changed');
     if ($image->getUserId() !== $authorized->getId())
-      throw new ApplicationException('The specified image cannot be changed by this user',403);
+      throw new AccessDeniedHttpException('The specified image cannot be changed by this user');
   }
   
   // Validate an uploaded file
@@ -53,13 +49,13 @@ class ImageControllerProvider implements ControllerProviderInterface
     global $app;
     
     if ($file === null)
-      throw new ApplicationException('The request did not contain a file to upload',400);
+      throw new BadRequestHttpException('The request did not contain a file to upload');
     if (!$file->isValid())
-      throw new ApplicationException('The specified file was not uploaded sucessfully: ' . $file->getErrorMessage(),400);
+      throw new BadRequestHttpException('The specified file was not uploaded sucessfully: ' . $file->getErrorMessage());
     if (!in_array($file->getMimeType(),$app['mimetypes']))
-      throw new ApplicationException('The type of the specified file is not supported',415);
+      throw new UnsupportedMediaTypeHttpException('The type of the specified file is not supported');
     if ($file->getClientSize() > $file->getMaxFilesize())
-      throw new ApplicationException('The specified file was too large; maximum size is ' . $file->getMaxFilesize(),413);
+      throw new PreconditionFailedHttpException('The specified file was too large; maximum size is ' . $file->getMaxFilesize());
   }
   
   // Get all existing images
@@ -91,7 +87,6 @@ class ImageControllerProvider implements ControllerProviderInterface
   public function replace($image, Request $request)
   {
     // Validate the image
-    $this->validate($image);
     $this->validateOwner($image,$request->request->get('user'));
   
     // Validate the uploaded file
@@ -110,9 +105,6 @@ class ImageControllerProvider implements ControllerProviderInterface
   // Get an existing image
   public function get($image)
   {
-    // Validate the image
-    $this->validate($image);
-    
     // Return the image
     $json = $this->serializer->serialize($image,'json');
     return JsonResponse::fromJsonString($json);
@@ -122,7 +114,6 @@ class ImageControllerProvider implements ControllerProviderInterface
   public function patch($image, Request $request)
   {
     // Validate the image
-    $this->validate($image);
     $this->validateOwner($image,$request->request->get('user'));
   
     // Replace the fields
@@ -143,7 +134,6 @@ class ImageControllerProvider implements ControllerProviderInterface
   public function delete($image, Request $request)
   {
     // Validate the image
-    $this->validate($image);
     $this->validateOwner($image,$request->request->get('user'));
   
     // Delete the image
@@ -160,9 +150,6 @@ class ImageControllerProvider implements ControllerProviderInterface
   // Get the raw data of an existing image
   public function getRaw($image)
   {
-    // Validate the image
-    $this->validate($image);
-    
     // Return the raw data
     return $image->respond($this->storage);
   }

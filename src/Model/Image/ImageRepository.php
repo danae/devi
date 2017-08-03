@@ -22,11 +22,11 @@ class ImageRepository implements ImageRepositoryInterface
   }
   
   // Get a image from the repository
-  public function find(string $id)
+  public function find(string $id): Image
   {
     $data = $this->database->selectOne($this->table,['id' => $id]);
     if ($data === null)
-      return null;
+      throw new ImageNotFoundException($id);
     else
       return $this->serializer->denormalize($data,Image::class);
   }

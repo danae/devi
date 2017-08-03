@@ -2,9 +2,8 @@
 namespace Devi\Model\User;
 
 use DateTime;
-use Devi\App\ApplicationException;
 use Devi\Model\ModifiableTrait;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -95,7 +94,7 @@ class User implements NormalizableInterface
     // Get already occupied names
     $occupied = $app['users.repository']->findAllIds();
     if (in_array($name,$occupied))
-      throw new ApplicationException('User name already in use');
+      throw new PreconditionFailedHttpException('User name already in use');
     
     // Return the new user
     return (new User)

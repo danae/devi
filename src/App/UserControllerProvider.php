@@ -9,6 +9,8 @@ use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Serializer\Serializer;
 
 class UserControllerProvider implements ControllerProviderInterface
@@ -26,20 +28,12 @@ class UserControllerProvider implements ControllerProviderInterface
     $this->serializer = $serializer;
   }
   
-  // Validate the user
-  private function validate($user)
-  {
-    // Check if the user exists
-    if ($user === null)
-      throw new ApplicationException('The specified user was not found',404);
-  }
-  
   // Validate the current user
   public function validateCurrent(User $user, Request $request)
   {
     // Check if the user is the owner of the image
     if ($user->getName() !== $request->request->get('user')->getName())
-      throw new ApplicationException('The specified user cannot be changed by this user',403);
+      throw new AccessDeniedHttpException('The specified user cannot be changed by this user',403);
   }
   
   // Check the current user
@@ -53,7 +47,7 @@ class UserControllerProvider implements ControllerProviderInterface
       $this->validateCurrent($user,$authorized);
       return true;
     } 
-    catch (ApplicationException $ex) 
+    catch (AccessDeniedHttpException $ex) 
     {
       return false;
     }
@@ -72,11 +66,11 @@ class UserControllerProvider implements ControllerProviderInterface
   {
     // Validate the parameters
     if (!$request->request->has('name'))
-      throw new ApplicationException('The request did not contain a name',400);
+      throw new BadRequestHttpException('The request did not contain a name');
     if (!$request->request->has('email'))
-      throw new ApplicationException('The request did not contain an email address',400);
+      throw new BadRequestHttpException('The request did not contain an email address');
     if (!$request->request->has('password'))
-      throw new ApplicationException('The request did not contain a password',400);
+      throw new BadRequestHttpException('The request did not contain a password');
   
     // Create the user
     $user = User::create(
@@ -96,9 +90,6 @@ class UserControllerProvider implements ControllerProviderInterface
   // Get an existing user
   public function get($user)
   {
-    // Validate the user
-    $this->validate($user);
-    
     // Return the user
     $json = $this->serializer->serialize($user,'json');
     return JsonResponse::fromJsonString($json);
@@ -108,7 +99,6 @@ class UserControllerProvider implements ControllerProviderInterface
   public function patch($user, Request $request)
   {
     // Validate the user
-    $this->validate($user);
     $this->validateCurrent($user,$request);
 
     // Replace the fields
@@ -133,7 +123,6 @@ class UserControllerProvider implements ControllerProviderInterface
   public function delete($user, Request $request)
   {
     // Validate the user
-    $this->validate($user);
     $this->validateCurrent($user,$request);
   
     // Delete the user
@@ -148,9 +137,6 @@ class UserControllerProvider implements ControllerProviderInterface
   public function getAllImages($user, Request $request)
   {
     global $app;
-    
-    // Validate the user
-    $this->validate($user);
     
     // Return the images
     if ($this->checkCurrent($user,$request->request->get('user')))

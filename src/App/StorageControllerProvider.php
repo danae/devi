@@ -28,10 +28,6 @@ class StorageControllerProvider implements ControllerProviderInterface
     $image = $request->attributes->get('image');
     $image = $this->repository->find($image);
     
-    // Check if the image exists
-    if ($image === null)
-      throw new ApplicationException('The specified image was not found',404);
-    
     // Set the attribute
     $request->attributes->set('image',$image);
   }

@@ -6,7 +6,7 @@ use Devi\Model\User\User;
 interface ImageRepositoryInterface
 {
   // Get an image from the repository
-  public function find(string $id);
+  public function find(string $id): Image;
   
   // Get all images
   public function findAll(): array;
