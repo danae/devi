@@ -95,7 +95,7 @@
           $.ajax({
             method: 'PATCH',
             url: '../images/' + data.id,
-            data: {file_name: 'Devi.png'},
+            data: {fileName: 'Devi.png'},
             beforeSend: function(xhr) {
               xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
             }

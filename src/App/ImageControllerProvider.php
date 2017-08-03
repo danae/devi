@@ -56,7 +56,7 @@ class ImageControllerProvider implements ControllerProviderInterface
       throw new ApplicationException('The request did not contain a file to upload',400);
     if (!$file->isValid())
       throw new ApplicationException('The specified file was not uploaded sucessfully: ' . $file->getErrorMessage(),400);
-    if (!array_key_exists($file->getMimeType(),$app['mimetypes']))
+    if (!in_array($file->getMimeType(),$app['mimetypes']))
       throw new ApplicationException('The type of the specified file is not supported',415);
     if ($file->getClientSize() > $file->getMaxFilesize())
       throw new ApplicationException('The specified file was too large; maximum size is ' . $file->getMaxFilesize(),413);

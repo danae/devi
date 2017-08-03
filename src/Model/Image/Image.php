@@ -3,11 +3,10 @@ namespace Devi\Model\Image;
 
 use DateTime;
 use Devi\Model\ModifiableTrait;
-use Devi\Model\Storage\StorageInterface;
 use Devi\Model\User\User;
+use Devi\Storage\StorageInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -143,7 +142,7 @@ class Image implements NormalizableInterface
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
     
     // Get already occupied ids
-    $occupied = $app['files.repository']->findAllIds();
+    $occupied = $app['images.repository']->findAllIds();
     $occupied_order = ceil(log(count($occupied),36)) + 1;
     
     // Set length
