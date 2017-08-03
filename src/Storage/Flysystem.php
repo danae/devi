@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Model\Storage;
+namespace Devi\Storage;
 
 use League\Flysystem\Exception;
 use League\Flysystem\Filesystem;
@@ -19,34 +19,34 @@ class Flysystem implements StorageInterface
     $this->format = $format;
   }
   
-  // Read the contents of a blob
+  // Read the contents of a file
   public function read($index)
   {
     $path = sprintf($this->format,$index);
     
-    // Read the blob from the filesystem
+    // Read the file from the filesystem
     return $this->filesystem->read($path);
   }
   
-  // Read the contents of a blob  as a stream
+  // Read the contents of a file as a stream
   public function readStream($index)
   {
     $path = sprintf($this->format,$index);
     
-    // Read the blob from the filesystem
+    // Read the file from the filesystem
     return $this->filesystem->readStream($path);
   }
 
-  // Write a string to a blob
+  // Write a string to a file
   public function write($index, $contents)
   {
     $path = sprintf($this->format,$index);
     
-    // Put the blob in the filesystem
+    // Put the file in the filesystem
     $this->filesystem->put($path,$contents);
   }
   
-  // Write a stream to a blob
+  // Write a stream to a file
   public function writeStream($index, $stream)
   {
     $path = sprintf($this->format,$index);
@@ -55,23 +55,23 @@ class Flysystem implements StorageInterface
     if (!is_resource($stream))
       throw new Exception("The stream is not a resource");
     
-    // Put the blob in the filesystem
+    // Put the file in the filesystem
     $this->filesystem->putStream($path,$stream);
   }
   
-  // Delete a blob
+  // Delete a file
   public function delete($index)
   {
     $path = sprintf($this->format,$index);
     
-    // Delete the blob from the filesystem
+    // Delete the file from the filesystem
     $this->filesystem->delete($path);
   }
   
-  // Create a response with the contents of a blob
+  // Create a response with the contents of a file
   public function respond($index, $filename, $filetype): Response
   {
-    // Get the contents of the blob
+    // Get the contents of the file
     $contents = $this->read($index);
     
     // Create a new response

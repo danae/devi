@@ -5,7 +5,7 @@ use DateTime;
 use Devi\Authorization\AuthorizationInterface;
 use Devi\Model\Image\Image;
 use Devi\Model\Image\ImageRepositoryInterface;
-use Devi\Model\Storage\StorageInterface;
+use Devi\Storage\StorageInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -48,7 +48,7 @@ class ImageControllerProvider implements ControllerProviderInterface
   }
   
   // Validate an uploaded file
-  public function validateFile($file)
+  public function validateUploadedFile($file)
   {
     global $app;
     
@@ -62,7 +62,7 @@ class ImageControllerProvider implements ControllerProviderInterface
       throw new ApplicationException('The specified file was too large; maximum size is ' . $file->getMaxFilesize(),413);
   }
   
-  // Get all extisting images
+  // Get all existing images
   public function getAll()
   {
     // Return all images
@@ -73,13 +73,13 @@ class ImageControllerProvider implements ControllerProviderInterface
   // Create a new image
   public function post(Request $request)
   {  
-    // Validate the file
-    $file = $request->files->get('file');
-    $this->validateFile($file);
+    // Validate the uploaded file
+    $uploadedFile = $request->files->get('file');
+    $this->validateUploadedFile($uploadedFile);
   
     // Create the image
     $image = Image::create($request->request->get('user'));
-    $image->upload($this->storage,$file);
+    $image->upload($this->storage,$uploadedFile);
     $this->repository->create($image);
     
     // Return the created image
@@ -94,12 +94,12 @@ class ImageControllerProvider implements ControllerProviderInterface
     $this->validate($image);
     $this->validateOwner($image,$request->request->get('user'));
   
-    // Validate the file
-    $file = $request->files->get('file');
-    $this->validateFile($file);
+    // Validate the uploaded file
+    $uploadedFile = $request->files->get('file');
+    $this->validateUploadedFile($uploadedFile);
 
     // Replace the image
-    $image->upload($this->storage,$file);
+    $image->upload($this->storage,$uploadedFile);
     $this->repository->update($image->setModifiedAt(new DateTime));
     
     // Return the image
@@ -131,7 +131,7 @@ class ImageControllerProvider implements ControllerProviderInterface
     if ($request->request->has('public'))
       $image->setPublic((boolean)$request->request->get('public'));
   
-    // Patch the updated image in the database
+    // Update the updated image in the database
     $this->repository->update($image->setModifiedAt(new DateTime));
   
     // Return the image

@@ -3,25 +3,25 @@ namespace Devi\Model\User;
 
 interface UserRepositoryInterface
 {
-  // Gets a user from the repository
+  // Get a user from the repository
   public function find(string $name);
   
-  // Gets a user by name
+  // Get a user by name
   public function findByName(string $name);
   
-  // Gets a user by public key
+  // Get a user by public key
   public function findByPublicKey(string $public_key);
   
-  // Gets all users
+  // Get all users
   public function findAll(): array;
   
-  // Gets all ids as an array
+  // Get all ids as an array
   public function findAllIds(): array;
   
-  // Puts a user into the repository
+  // Create a user in the repository
   public function create(User $user);
   
-  // Patches a user in the repository
+  // Update a user in the repository
   public function update(User $user);
   
   // Deletes a user from the repository

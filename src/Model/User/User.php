@@ -3,22 +3,22 @@ namespace Devi\Model\User;
 
 use DateTime;
 use Devi\App\ApplicationException;
-use Symfony\Component\Serializer\Normalizer\DenormalizableInterface;
+use Devi\Model\ModifiableTrait;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-class User implements NormalizableInterface, DenormalizableInterface
+class User implements NormalizableInterface
 {
+  use ModifiableTrait;
+  
   // Variables
   private $id;
   private $name;
   private $email;
   private $password;
-  private $public_key;
-  private $private_key;
-  private $created_at;
-  private $modified_at;
+  private $publicKey;
+  private $privateKey;
   
   // Management
   public function getId()
@@ -59,38 +59,20 @@ class User implements NormalizableInterface, DenormalizableInterface
   }
   public function getPublicKey(): string
   {
-    return $this->public_key;
+    return $this->publicKey;
   }
-  public function setPublicKey(string $public_key): self
+  public function setPublicKey(string $publicKey): self
   {
-    $this->public_key = $public_key;
+    $this->publicKey = $publicKey;
     return $this;
   }
   public function getPrivateKey(): string
   {
-    return $this->private_key;
+    return $this->privateKey;
   }
-  public function setPrivateKey(string $private_key): self
+  public function setPrivateKey(string $privateKey): self
   {
-    $this->private_key = $private_key;
-    return $this;
-  }
-  public function getCreatedAt(): DateTime
-  {
-    return $this->created_at;
-  }
-  public function setCreatedAt(DateTime $created_at): self
-  {
-    $this->created_at = $created_at;
-    return $this;
-  }
-  public function getModifiedAt(): DateTime
-  {
-    return $this->modified_at;
-  }
-  public function setModifiedAt(DateTime $modified_at): self
-  {
-    $this->modified_at = $modified_at;
+    $this->privateKey = $privateKey;
     return $this;
   }
   
@@ -98,29 +80,11 @@ class User implements NormalizableInterface, DenormalizableInterface
   public function normalize(NormalizerInterface $normalizer, $format = null, array $context = []): array
   {
     return [
-      'id' => $this->getId(),
       'name' => $this->getName(),
       'email' => $this->getEmail(),
-      'password' => $this->getPassword(),
-      'public_key' => $this->getPublicKey(),
-      'private_key' => $this->getPrivateKey(),
-      'created_at' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
-      'modified_at' => $normalizer->normalize($this->getModifiedAt(),$format,$context)
+      'createdAt' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
+      'modifiedAt' => $normalizer->normalize($this->getModifiedAt(),$format,$context)
     ];
-  }
-  
-  // Denormalize the user
-  public function denormalize(DenormalizerInterface $denormalizer, $data, $format = null, array $context = []): User
-  {
-    return $this
-      ->setId($data['id'])
-      ->setName($data['name'])
-      ->setEmail($data['email'])
-      ->setPassword($data['password'])
-      ->setPublicKey($data['public_key'])
-      ->setPrivateKey($data['private_key'])
-      ->setCreatedAt($denormalizer->denormalize($data['created_at'],DateTime::class,$format,$context))
-      ->setModifiedAt($denormalizer->denormalize($data['modified_at'],DateTime::class,$format,$context));
   }
 
   // Create a user

@@ -2,26 +2,26 @@
 namespace Devi\Model\Image;
 
 use DateTime;
+use Devi\Model\ModifiableTrait;
 use Devi\Model\Storage\StorageInterface;
 use Devi\Model\User\User;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\Normalizer\DenormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-class Image implements NormalizableInterface, DenormalizableInterface
+class Image implements NormalizableInterface
 {
+  use ModifiableTrait;
+  
   // Variables
   private $id;
-  private $file_name;
-  private $content_type;
-  private $content_length;
-  private $created_at;
-  private $modified_at;
+  private $fileName;
+  private $contentType;
+  private $contentLength;
   private $public;
-  private $user_id;
+  private $userId;
   
   // Management
   public function getId(): string
@@ -35,47 +35,29 @@ class Image implements NormalizableInterface, DenormalizableInterface
   }
   public function getFileName(): string
   {
-    return $this->file_name;
+    return $this->fileName;
   }
-  public function setFileName(string $file_name): self
+  public function setFileName(string $fileName): self
   {
-    $this->file_name = $file_name;
+    $this->fileName = $fileName;
     return $this;
   }
   public function getContentType(): string
   {
-    return $this->content_type;
+    return $this->contentType;
   }
-  public function setContentType(string $content_type): self
+  public function setContentType(string $contentType): self
   {
-    $this->content_type = $content_type;
+    $this->contentType = $contentType;
     return $this;
   }
   public function getContentLength(): int
   {
-    return $this->content_length;
+    return $this->contentLength;
   }
-  public function setContentLength(int $content_length): self
+  public function setContentLength(int $contentLength): self
   {
-    $this->content_length = $content_length;
-    return $this;
-  }
-  public function getCreatedAt(): DateTime
-  {
-    return $this->created_at;
-  }
-  public function setCreatedAt(DateTime $created_at): self
-  {
-    $this->created_at = $created_at;
-    return $this;
-  }
-  public function getModifiedAt(): DateTime
-  {
-    return $this->modified_at;
-  }
-  public function setModifiedAt(DateTime $modified_at): self
-  {
-    $this->modified_at = $modified_at;
+    $this->contentLength = $contentLength;
     return $this;
   }
   public function isPublic(): bool
@@ -89,44 +71,32 @@ class Image implements NormalizableInterface, DenormalizableInterface
   }
   public function getUserId(): int
   {
-    return $this->user_id;
+    return $this->userId;
   }
-  public function setUserId(int $user_id): self
+  public function setUserId(int $userId): self
   {
-    $this->user_id = $user_id;
+    $this->userId = $userId;
     return $this;
   }
   
-  // Normalize the image for use in a database
+  // Normalize the file for use in a database
   public function normalize(NormalizerInterface $normalizer, $format = null, array $context = []): array
   {
+    global $app;
+    
     return [
       'id' => $this->getId(),
-      'file_name' => $this->getFileName(),
-      'content_type' => $this->getContentType(),
-      'content_length' => (int)$this->getContentLength(),
-      'created_at' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
-      'modified_at' => $normalizer->normalize($this->getModifiedAt(),$format,$context),
+      'fileName' => $this->getFileName(),
+      'contentType' => $this->getContentType(),
+      'contentLength' => (int)$this->getContentLength(),
+      'createdAt' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
+      'modifiedAt' => $normalizer->normalize($this->getModifiedAt(),$format,$context),
       'public' => (bool)$this->isPublic(),
-      'user_id' => (int)$this->getUserId()
+      'user' => $normalizer->normalize($app['users.repository']->find($this->getUserId()),$format,$context)
     ];
   }
   
-  // Denormalize the image
-  public function denormalize(DenormalizerInterface $denormalizer, $data, $format = null, array $context = []): Image
-  {
-    return $this
-      ->setId($data['id'])
-      ->setFileName($data['file_name'])
-      ->setContentType($data['content_type'])
-      ->setContentLength((int)$data['content_length'])
-      ->setCreatedAt($denormalizer->denormalize($data['created_at'],DateTime::class,$format,$context))
-      ->setModifiedAt($denormalizer->denormalize($data['modified_at'],DateTime::class,$format,$context))
-      ->setPublic((bool)$data['public'])
-      ->setUserId($data['user_id']);
-  }
-  
-  // Post the raw image from an uploaded file
+  // Post the raw file from an uploaded file
   public function upload(StorageInterface $storage, UploadedFile $file, $file_name = null): self
   {
     // Upload the file
@@ -134,14 +104,14 @@ class Image implements NormalizableInterface, DenormalizableInterface
     $storage->writeStream($this->getId(),$stream);
     fclose($stream);
     
-    // Return the updated image
+    // Return the updated file
     return $this
       ->setFileName($file_name ?? ($file->getClientOriginalName() ?? $this->getFileName()))
       ->setContentType($file->getMimeType())
       ->setContentLength($file->getSize());
   }
   
-  // Get the raw image as a BinaryFileResponse
+  // Get the raw file as a BinaryFileResponse
   public function respond(StorageInterface $storage): Response
   {
     // Get the response from the storage
@@ -152,10 +122,10 @@ class Image implements NormalizableInterface, DenormalizableInterface
     return $response;
   }
   
-  // Create an image
+  // Create a file
   public static function create(User $user): self
   {
-    // Return the new image
+    // Return the new file
     return (new Image)
       ->setId(self::createId())
       ->setUserId($user->getId())
@@ -164,7 +134,7 @@ class Image implements NormalizableInterface, DenormalizableInterface
       ->setPublic(true);
   }
   
-  // Generate an image id
+  // Generate a file id
   private static function createId($length = null): string
   {
     global $app;
@@ -173,7 +143,7 @@ class Image implements NormalizableInterface, DenormalizableInterface
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
     
     // Get already occupied ids
-    $occupied = $app['images.repository']->findAllIds();
+    $occupied = $app['files.repository']->findAllIds();
     $occupied_order = ceil(log(count($occupied),36)) + 1;
     
     // Set length

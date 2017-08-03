@@ -5,27 +5,27 @@ use Devi\Model\User\User;
 
 interface ImageRepositoryInterface
 {
-  // Gets an image from the repository
+  // Get an image from the repository
   public function find(string $id);
   
-  // Gets all images
+  // Get all images
   public function findAll(): array;
   
-  // Gets all images by user
+  // Get all images by user
   public function findAllByUser(User $user): array;
   
-  // Gets all public images by user
+  // Get all public images by user
   public function findAllPublicByUser(User $user): array;
   
-  // Gets all ids as an array
+  // Get all ids as an array
   public function findAllIds(): array;
   
-  // Puts an image into the repository
+  // Create a image in the repository
   public function create(Image $image);
   
-  // Patches an image in the repository
+  // Update a image in the repository
   public function update(Image $image);
   
-  // Deletes an image from the repository
+  // Delete a image from the repository
   public function delete(Image $image);
 }

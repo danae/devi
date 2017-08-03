@@ -15,10 +15,10 @@ $settings['storage.backend'] = new League\Flysystem\Adapter\Local('store');
 // Update this to the MIME types you want to accept while uploading, the array
 // consists of the MIME type as key and the default extension as value
 $settings['mimetypes'] = [
-  'image/png' => 'png',
-  'image/jpeg' => 'jpg',
-  'image/gif' => 'gif',
-  'image/svg+xml' => 'svg'
+  'png' => 'image/png',
+  'jpg' => 'image/jpeg',
+  'gif' => 'image/gif',
+  'svg' => 'image/svg+xml'
 ];
 
 // Return the settings

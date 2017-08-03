@@ -20,17 +20,17 @@ class UserRepository implements UserRepositoryInterface
     $this->serializer = $serializer;
   }
   
-  // Gets a user from the repository
-  public function find(string $name)
+  // Get a user from the repository
+  public function find(string $id)
   {
-    $data = $this->database->selectOne($this->table,['name' => $name]);
+    $data = $this->database->selectOne($this->table,['id' => $id]);
     if ($data === null)
       return null;
     else
       return $this->serializer->denormalize($data,User::class);
   }
   
-  // Gets a user by name
+  // Get a user by name
   public function findByName(string $name)
   {
     $data = $this->database->selectOne($this->table,['name' => $name]);
@@ -40,20 +40,20 @@ class UserRepository implements UserRepositoryInterface
       return $this->serializer->denormalize($data,User::class);
   }
   
-  // Gets a user by public key
-  public function findByPublicKey(string $public_key)
+  // Get a user by public key
+  public function findByPublicKey(string $publicKey)
   {
-    $data = $this->database->selectOne($this->table,['public_key' => $public_key]);
+    $data = $this->database->selectOne($this->table,['publicKey' => $publicKey]);
     if ($data === null)
       return null;
     else
       return $this->serializer->denormalize($data,User::class);
   }
   
-  // Gets all users
+  // Get all users
   public function findAll(): array
   {
-    $data = $this->database->select($this->table,[],'modified_at desc');
+    $data = $this->database->select($this->table,[],'modifiedAt desc');
     return array_map(function($row) {
       return $this->serializer->denormalize($row,User::class);
     },$data);
@@ -66,21 +66,21 @@ class UserRepository implements UserRepositoryInterface
     return $st->fetchAll(PDO::FETCH_NUM);
   }
   
-  // Puts a user into the repository
+  // Create a user in the repository
   public function create(User $user)
   {
     $array = $this->serializer->normalize($user);
     $this->database->insert($this->table,$array);
   }
   
-  // Patches a user in the repository
+  // Update a user in the repository
   public function update(User $user)
   {
     $array = $this->serializer->normalize($user);
     $this->database->update($this->table,$array,['id' => $user->getId()]);
   }
   
-  // Deletes a user from the repository
+  // Delete a user from the repository
   public function delete(User $user)
   {
     $this->database->delete($this->table,['id' => $user->getId()]);
