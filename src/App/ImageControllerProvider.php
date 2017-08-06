@@ -81,7 +81,7 @@ class ImageControllerProvider implements ControllerProviderInterface
   }
   
   // Replace an existing image
-  public function replace($image, Request $request)
+  public function replace(Image $image, Request $request)
   {
     // Validate the image
     $this->validateOwner($image,$request->request->get('user'));
@@ -100,7 +100,7 @@ class ImageControllerProvider implements ControllerProviderInterface
   }
 
   // Get an existing image
-  public function get($image)
+  public function get(Image $image)
   {
     // Return the image
     $json = $this->serializer->serialize($image,'json');
@@ -108,7 +108,7 @@ class ImageControllerProvider implements ControllerProviderInterface
   }
 
   // Update an existing image
-  public function patch($image, Request $request)
+  public function patch(Image $image, Request $request)
   {
     // Validate the image
     $this->validateOwner($image,$request->request->get('user'));
@@ -128,7 +128,7 @@ class ImageControllerProvider implements ControllerProviderInterface
   }
 
   // Delete an existing image
-  public function delete($image, Request $request)
+  public function delete(Image $image, Request $request)
   {
     // Validate the image
     $this->validateOwner($image,$request->request->get('user'));
@@ -142,13 +142,6 @@ class ImageControllerProvider implements ControllerProviderInterface
     // Return the image
     $json = $this->serializer->serialize($image,'json');
     return JsonResponse::fromJsonString($json);
-  }
-  
-  // Get the raw data of an existing image
-  public function getRaw($image)
-  {
-    // Return the raw data
-    return $image->respond($this->storage);
   }
   
   // Connect to the application
@@ -185,13 +178,6 @@ class ImageControllerProvider implements ControllerProviderInterface
       ->delete('/{image}',[$this,'delete'])
       ->convert('image',[$this->repository,'find'])
       ->before([$authorization,'authorize']);
-    
-    
-    // Create raw image routes
-    $controllers
-      ->get('/{image}/raw',[$this,'getRaw'])
-      ->convert('image',[$this->repository,'find'])
-      ->before([$authorization,'optional']);
     
     // Return the controllers
     return $controllers;

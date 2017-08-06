@@ -8,6 +8,7 @@ use Devi\Model\User\User;
 use Devi\Storage\StorageInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -83,7 +84,18 @@ class Image implements NormalizableInterface
       'createdAt' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
       'modifiedAt' => $normalizer->normalize($this->getModifiedAt(),$format,$context),
       'public' => (bool)$this->isPublic(),
-      'user' => $normalizer->normalize($app['users.repository']->find($this->getUserId()),$format,$context)
+      'user' => $normalizer->normalize($app['users.repository']->find($this->getUserId()),$format,$context),
+        
+      // URLs for image blobs
+      'imageUrl' => $app['url_generator']->generate('blob.image',[
+        'image' => $this->getId(),
+        'format' => array_search($this->getContentType(),$app['mimetypes'])
+      ],UrlGenerator::ABSOLUTE_URL),
+      'thumbnailUrl' => $app['url_generator']->generate('blob.thumbnail',[
+        'image' => $this->getId(),
+        'width' => 150,
+        'height' => 150
+      ],UrlGenerator::ABSOLUTE_URL)
     ];
   }
   

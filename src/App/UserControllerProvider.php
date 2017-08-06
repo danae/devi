@@ -30,18 +30,15 @@ class UserControllerProvider implements ControllerProviderInterface
   {
     // Check if the user is the owner of the image
     if ($user->getName() !== $request->request->get('user')->getName())
-      throw new AccessDeniedHttpException('The specified user cannot be changed by this user',403);
+      throw new AccessDeniedHttpException('The specified user cannot be changed by this user');
   }
   
   // Check the current user
-  public function checkCurrent(User $user, $authorized)
+  public function checkCurrent(User $user, Request $request)
   {
     try
     {
-      if ($authorized === null)
-        return false;
-      
-      $this->validateCurrent($user,$authorized);
+      $this->validateCurrent($user,$request);
       return true;
     } 
     catch (AccessDeniedHttpException $ex) 
@@ -85,7 +82,7 @@ class UserControllerProvider implements ControllerProviderInterface
   }
   
   // Get an existing user
-  public function get($user)
+  public function get(User $user)
   {
     // Return the user
     $json = $this->serializer->serialize($user,'json');
@@ -93,7 +90,7 @@ class UserControllerProvider implements ControllerProviderInterface
   }
 
   // Patch an existing user
-  public function patch($user, Request $request)
+  public function patch(User $user, Request $request)
   {
     // Validate the user
     $this->validateCurrent($user,$request);
@@ -117,7 +114,7 @@ class UserControllerProvider implements ControllerProviderInterface
   }
   
   // Delete an existing user
-  public function delete($user, Request $request)
+  public function delete(User $user, Request $request)
   {
     // Validate the user
     $this->validateCurrent($user,$request);
@@ -131,12 +128,12 @@ class UserControllerProvider implements ControllerProviderInterface
   }
   
   // Get all images of a user
-  public function getAllImages($user, Request $request)
+  public function getAllImages(User $user, Request $request)
   {
     global $app;
     
     // Return the images
-    if ($this->checkCurrent($user,$request->request->get('user')))
+    if ($this->checkCurrent($user,$request))
     {
       $json = $this->serializer->serialize($app['images.repository']->findAllByUser($user),'json');
       return JsonResponse::fromJsonString($json);

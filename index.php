@@ -12,7 +12,6 @@ use Devi\Model\User\UserRepository;
 use Devi\Storage\Flysystem;
 use Devi\Storage\GzipWrapper;
 use Devi\Utils\Database;
-use Devi\Utils\ImagineUtils;
 use Imagine\Gd\Imagine;
 use JDesrosiers\Silex\Provider\CorsServiceProvider;
 use League\Flysystem\Filesystem;
@@ -55,10 +54,8 @@ $app->error(function(Exception $ex) {
 });
 
 // Add support for CORS requests
-$app->register(new CorsServiceProvider(),[
-  'cors.allowHeaders' => 'Origin, Content-Type, Accept, Authorization, X-Requested-With',
-  'cors.allowMethods' => 'GET, POST, PATCH, DELETE, OPTIONS'
-]);
+$app->register(new CorsServiceProvider);
+$app->after($app['cors']);
 
 // Create the database service
 $app['database'] = function($app) {
@@ -89,9 +86,6 @@ $app['authorization'] = function($app) {
 // Create the imagine interface
 $app['imagine'] = function() {
   return new Imagine;
-};
-$app['imagine.utils'] = function($app) {
-  return new ImagineUtils($app['imagine'],$app['mimetypes']);
 };
 
 // Create the user provider
@@ -127,7 +121,7 @@ $app['storage.provider'] = function($app) {
 $app->mount('/users',$app['users.provider']);
 $app->mount('/images',$app['images.provider']);
 $app->mount('/albums',$app['albums.provider']);
-$app->mount('/images/{image}',$app['storage.provider']);
+$app->mount('/i',$app['storage.provider']);
 
 // Run the application
 $app->run();

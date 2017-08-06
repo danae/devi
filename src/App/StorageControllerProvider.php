@@ -1,13 +1,15 @@
 <?php
-
 namespace Devi\App;
 
+use Devi\Model\Image\Image;
 use Devi\Model\Image\ImageRepositoryInterface;
 use Devi\Storage\StorageInterface;
+use Imagine\Image\Box;
+use Imagine\Image\ImageInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class StorageControllerProvider implements ControllerProviderInterface
 {
@@ -22,52 +24,67 @@ class StorageControllerProvider implements ControllerProviderInterface
     $this->storage = $storage;
   }
   
-  // Validate image
-  public function validate(Request $request)
+  // Respond with an imagine image
+  private function respondImage(ImageInterface $image, string $format, string $name, Application $app)
   {
-    $image = $request->attributes->get('image');
-    $image = $this->repository->find($image);
+    // Check if the format is supported
+    if (!array_key_exists($format,$app['mimetypes']))
+      $app->abort(415,'The specified format is not supported');
     
-    // Set the attribute
-    $request->attributes->set('image',$image);
+    // Get the contents of the image
+    $contents = $image->get($format);
+
+    // Create a new response
+    $response = new Response($contents);
+    
+    // Set the response headers
+    $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_INLINE,$name);
+    $response->headers->set('Content-Disposition',$disposition);
+    $response->headers->set('Content-Type',$app['mimetypes'][$format]);
+    
+    // Return the response
+    return $response;
   }
   
   // Raw image
-  public function raw($format, Request $request, Application $app)
+  public function raw(Image $image, string $format, Application $app)
   {
-    $image = $request->attributes->get('image');
-    
-    // Check if the mime type is supported
-    if (!in_array($image->getContentType(),$app['mimetypes']))
-      $app->abort(415,'The content type of the image is not supported');
-            
     // Check if the mimetype equals the requested format
-    //if ($app['mimetypes'] === $format)
-    //  return $image->respond($this->storage);
+    if ($app['mimetypes'][$format] === $image->getContentType())
+      return $image->respond($this->storage);
     
-    // Return the raw data
-    return $image->respond($this->storage);
+    // Get the contents of the stream
+    $imagine = $app['imagine'];
+    $img = $imagine->read($this->storage->readStream($image->getId()));
+    
+    return $this->respondImage($img,$format,$image->getName(),$app);
+  }
+  
+  // Thumbnail
+  public function thumbnail(Image $image, int $width, int $height, Application $app)
+  {
+    $imagine = $app['imagine'];
+    $img = $imagine->read($this->storage->readStream($image->getId()));
+    $img = $img->thumbnail(new Box($width,$height),ImageInterface::THUMBNAIL_OUTBOUND);
+    
+    return $this->respondImage($img,'png',sprintf('%s_%dx%d.png',$image->getName(),$width,$height),$app);
   }
     
   // Connect
   public function connect(Application $app)
   {
     // Create controllers
-    $controllers = $app['controllers_factory']
-      ->before([$this,'validate']);
+    $controllers = $app['controllers_factory'];
     
     // Raw image
-    $controllers->get('/raw.{format}',[$this,'raw']);
+    $controllers->get('/{image}.{format}',[$this,'raw'])
+      ->convert('image',[$this->repository,'find'])
+      ->bind('blob.image');
     
-    $controllers->get('/thumbnail/{width}x{height}.png',function($width, $height, Request $request)
-    {
-      $image = $request->attributes->get('image');
-      return new JsonResponse([
-        'image' => $image,
-        'width' => $width,
-        'height' => $height
-      ]);
-    });
+    // Thumbnail
+    $controllers->get('/{image}/thumbnail/{width}x{height}.png',[$this,'thumbnail'])
+      ->convert('image',[$this->repository,'find'])
+      ->bind('blob.thumbnail');
     
     // Return the controllers
     return $controllers;
