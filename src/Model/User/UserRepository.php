@@ -1,6 +1,7 @@
 <?php
 namespace Devi\Model\User;
 
+use Devi\Exception\UserNotFoundException;
 use Devi\Utils\Database;
 use PDO;
 use Symfony\Component\Serializer\Serializer;

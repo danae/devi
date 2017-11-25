@@ -1,5 +1,5 @@
 <?php
-namespace Devi\App;
+namespace Devi\Provider;
 
 use Devi\Model\Image\Image;
 use Devi\Model\Image\ImageRepositoryInterface;
@@ -8,10 +8,11 @@ use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
-class StorageControllerProvider implements ControllerProviderInterface
+class GetControllerProvider implements ControllerProviderInterface
 {
   // Variables
   private $repository;
@@ -49,14 +50,18 @@ class StorageControllerProvider implements ControllerProviderInterface
   // Raw image
   public function raw(Image $image, string $format, Application $app)
   {
+    // Get the MIME type of the image
+    $mimetype = $this->storage->getMimeType($image->getId());
+    
     // Check if the mimetype equals the requested format
-    if ($app['mimetypes'][$format] === $image->getContentType())
-      return $image->respond($this->storage);
+    if ($app['mimetypes'][$format] === $mimetype)
+      return $this->storage->respond($image->getId(),$image->getName());
     
     // Get the contents of the stream
     $imagine = $app['imagine'];
     $img = $imagine->read($this->storage->readStream($image->getId()));
     
+    //return new JsonResponse(["mimetype" => $mimetype]);
     return $this->respondImage($img,$format,$image->getName(),$app);
   }
   
@@ -79,12 +84,12 @@ class StorageControllerProvider implements ControllerProviderInterface
     // Raw image
     $controllers->get('/{image}.{format}',[$this,'raw'])
       ->convert('image',[$this->repository,'find'])
-      ->bind('blob.image');
+      ->bind('get.image');
     
     // Thumbnail
     $controllers->get('/{image}/thumbnail/{width}x{height}.png',[$this,'thumbnail'])
       ->convert('image',[$this->repository,'find'])
-      ->bind('blob.thumbnail');
+      ->bind('get.thumbnail');
     
     // Return the controllers
     return $controllers;

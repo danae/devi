@@ -1,5 +1,5 @@
 <?php
-namespace Devi\App;
+namespace Devi\Provider;
 
 use DateTime;
 use Devi\Model\User\User;
@@ -29,7 +29,7 @@ class UserControllerProvider implements ControllerProviderInterface
   public function validateCurrent(User $user, Request $request)
   {
     // Check if the user is the owner of the image
-    if ($user->getName() !== $request->request->get('user')->getName())
+    if ($request->request->get('user') === null || $user->getName() !== $request->request->get('user')->getName())
       throw new AccessDeniedHttpException('The specified user cannot be changed by this user');
   }
   
@@ -135,11 +135,13 @@ class UserControllerProvider implements ControllerProviderInterface
     // Return the images
     if ($this->checkCurrent($user,$request))
     {
+      // Return all images
       $json = $this->serializer->serialize($app['images.repository']->findAllByUser($user),'json');
       return JsonResponse::fromJsonString($json);
     }
     else
     {
+      // Return only public images
       $json = $this->serializer->serialize($app['images.repository']->findAllPublicByUser($user),'json');
       return JsonResponse::fromJsonString($json);
     }
@@ -157,23 +159,28 @@ class UserControllerProvider implements ControllerProviderInterface
     // Create user collection routes
     $controllers
       ->get('/',[$this,'getAll'])
-      ->before([$authorization,'optional']);
+      ->before([$authorization,'optional'])
+      ->bind('user.collection.get');
 
     // Create user routes
     $controllers
-      ->post('/',[$this,'post']);
+      ->post('/',[$this,'post'])
+      ->bind('user.post');
     $controllers
       ->get('/{user}',[$this,'get'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before([$authorization,'optional']);
+      ->before([$authorization,'optional'])
+      ->bind('user.get');
     $controllers
       ->patch('/{user}',[$this,'patch'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before([$authorization,'authorize']);
+      ->before([$authorization,'authorize'])
+      ->bind('user.patch');
     $controllers
       ->delete('/{user}',[$this,'delete'])
       ->convert('user',[$this->repository,'findByName'])
-      ->before([$authorization,'authorize']);
+      ->before([$authorization,'authorize'])
+      ->bind('user.delete');
     
     // Create user images routes
     $controllers

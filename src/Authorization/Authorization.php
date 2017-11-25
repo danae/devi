@@ -1,6 +1,7 @@
 <?php
 namespace Devi\Authorization;
 
+use Devi\Exception\AuthorizationException;
 use Devi\Model\User\UserRepositoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 

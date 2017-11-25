@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Model\User;
+namespace Devi\Exception;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

@@ -5,6 +5,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 interface StorageInterface 
 {
+  // Returns if a file exists
+  public function has($index);
+  
   // Read the contents of a file
   public function read($index);
   
@@ -20,6 +23,9 @@ interface StorageInterface
   // Delete a file
   public function delete($index);
   
+  // Get the MIME type of a file
+  public function getMimeType($index);
+  
   // Create a response with the contents of a file
-  public function respond($index, $filename, $filetype): Response;
+  public function respond($index, $filename): Response;
 }

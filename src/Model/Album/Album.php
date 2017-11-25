@@ -69,10 +69,10 @@ class Album implements NormalizableInterface
     return (new self)
       ->setId(self::createId())
       ->setName($user->getName() . '\'s album')
-      ->setUserId($user->getId())
       ->setCreatedAt(new DateTime)
       ->setModifiedAt(new DateTime)
-      ->setPublic(true);
+      ->setPublic(true)
+      ->setUserId($user->getId());
   }
   
   // Generate an album identifier

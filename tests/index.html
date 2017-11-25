@@ -33,19 +33,22 @@
     
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script>
-      var baseUrl = 'https://api.devi.im/v1/';
+      var baseUrl = '/Devi/';
       
       $('#upload').submit(function(e) {
         e.preventDefault();
         
         $.ajaxSetup({
           async: false,
-          success: function(data) {
-            $('#output').append("<p>" + JSON.stringify(data) + "</p>");
-            console.log(data);
+          success: function(data, textStatus, xhr) {
+            var mime = xhr.getResponseHeader('Content-Type');
+            if (mime.startsWith('image'))
+              $('#output').append("<p>Image of type <i>" + mime + "</i></p>");
+            else
+              $('#output').append("<p>" + JSON.stringify(data) + "</p>");
           },
           error: function(xhr) {
-            $('#output').append("<p>" + xhr.responseText + "</p>");
+            $('#output').append("<p style=\"color: red;\">" + xhr.responseJSON.error + "</p>");
             console.log(xhr.responseText);
           }
         });
@@ -73,12 +76,12 @@
           },
         });
         
-        // Create an image
+        // Upload an image
         var fd = new FormData();
         fd.append('file',document.getElementById('file').files[0]);
         $.ajax({
           method: 'POST',
-          url: baseUrl + 'images/',
+          url: baseUrl + 'upload/',
           data: fd,
           processData: false,
           contentType: false,
@@ -86,6 +89,12 @@
             xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
           }
         }).done(function(image) {
+          // Get a user's images
+          $.ajax({
+            method: 'GET',
+            url: baseUrl + 'users/devi/images/'
+          });
+        
           // Get an image
           $.ajax({
             method: 'GET',
@@ -100,6 +109,13 @@
             beforeSend: function(xhr) {
               xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
             }
+          });
+          
+          // Get the image data
+          // Get an image
+          $.ajax({
+            method: 'GET',
+            url: baseUrl + 'get/' + image.id + '.png'
           });
           
           // Create an album

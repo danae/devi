@@ -4,7 +4,7 @@ namespace Devi\Model;
 trait OwnableTrait
 {
   // Variables
-  private $userId;
+  protected $userId;
   
   // Management
   public function getUserId(): int

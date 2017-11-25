@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Model\Album;
+namespace Devi\Exception;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

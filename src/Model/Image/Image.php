@@ -6,8 +6,6 @@ use Devi\Model\ModifiableTrait;
 use Devi\Model\OwnableTrait;
 use Devi\Model\User\User;
 use Devi\Storage\StorageInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -87,11 +85,11 @@ class Image implements NormalizableInterface
       'user' => $normalizer->normalize($app['users.repository']->find($this->getUserId()),$format,$context),
         
       // URLs for image blobs
-      'imageUrl' => $app['url_generator']->generate('blob.image',[
+      'imageUrl' => $app['url_generator']->generate('get.image',[
         'image' => $this->getId(),
         'format' => array_search($this->getContentType(),$app['mimetypes'])
       ],UrlGenerator::ABSOLUTE_URL),
-      'thumbnailUrl' => $app['url_generator']->generate('blob.thumbnail',[
+      'thumbnailUrl' => $app['url_generator']->generate('get.thumbnail',[
         'image' => $this->getId(),
         'width' => 150,
         'height' => 150
@@ -99,30 +97,10 @@ class Image implements NormalizableInterface
     ];
   }
   
-  // Post the raw file from an uploaded file
-  public function upload(StorageInterface $storage, UploadedFile $file, $name = null): self
+  // Return a stored image
+  public function storedAt(StorageInterface $storage)
   {
-    // Upload the file
-    $stream = fopen($file->getPathname(),'rb');
-    $storage->writeStream($this->getId(),$stream);
-    fclose($stream);
-    
-    // Return the updated file
-    return $this
-      ->setName($name ?? ($file->getClientOriginalName() ?? $this->getName()))
-      ->setContentType($file->getMimeType())
-      ->setContentLength($file->getSize());
-  }
-  
-  // Get the raw file as a BinaryFileResponse
-  public function respond(StorageInterface $storage): Response
-  {
-    // Get the response from the storage
-    $response = $storage->respond($this->getId(),$this->getName(),$this->getContentType());
-    $response->setLastModified($this->getModifiedAt());
-    
-    // Return the response
-    return $response;
+    return new StoredImage($this,$storage);
   }
   
   // Create an image
@@ -131,10 +109,13 @@ class Image implements NormalizableInterface
     // Return the new file
     return (new self)
       ->setId(self::createId())
-      ->setUserId($user->getId())
+      ->setName("")
+      ->setContentType("application/x-zerosize")
+      ->setContentLength(0)
       ->setCreatedAt(new DateTime)
       ->setModifiedAt(new DateTime)
-      ->setPublic(true);
+      ->setPublic(true)
+      ->setUserId($user->getId());
   }
   
   // Generate an image identifier

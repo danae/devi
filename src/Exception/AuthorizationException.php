@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Authorization;
+namespace Devi\Exception;
 
 use Exception;
 

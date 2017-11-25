@@ -1,5 +1,5 @@
 <?php
-namespace Devi\App;
+namespace Devi\Provider;
 
 use DateTime;
 use Devi\Model\Album\Album;
@@ -110,24 +110,29 @@ class AlbumControllerProvider implements ControllerProviderInterface
     // Create album collection routes
     $controllers
       ->get('/',[$this,'getAll'])
-      ->before([$authorization,'optional']);
+      ->before([$authorization,'optional'])
+      ->bind('album.collection.get');
 
     // Create album routes
     $controllers
       ->post('/',[$this,'post'])
-      ->before([$authorization,'authorize']);
+      ->before([$authorization,'authorize'])
+      ->bind('album.post');
     $controllers
       ->get('/{album}',[$this,'get'])
       ->convert('album',[$this->repository,'find'])
-      ->before([$authorization,'optional']);
+      ->before([$authorization,'optional'])
+      ->bind('album.get');
     $controllers
       ->patch('/{album}',[$this,'patch'])
       ->convert('album',[$this->repository,'find'])
-      ->before([$authorization,'authorize']);
+      ->before([$authorization,'authorize'])
+      ->bind('album.patch');
     $controllers
       ->delete('/{album}',[$this,'delete'])
       ->convert('album',[$this->repository,'find'])
-      ->before([$authorization,'authorize']);
+      ->before([$authorization,'authorize'])
+      ->bind('album.delete');
     
     // Return the controllers
     return $controllers;

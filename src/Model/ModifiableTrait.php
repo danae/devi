@@ -7,8 +7,8 @@ use InvalidArgumentException;
 trait ModifiableTrait
 {
   // Variables
-  private $createdAt;
-  private $modifiedAt;
+  protected $createdAt;
+  protected $modifiedAt;
   
   // Management
   public function getCreatedAt(): DateTime

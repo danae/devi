@@ -1,14 +1,15 @@
 <?php
 require "vendor/autoload.php";
 
-use Devi\App\AlbumControllerProvider;
-use Devi\App\ImageControllerProvider;
-use Devi\App\StorageControllerProvider;
-use Devi\App\UserControllerProvider;
 use Devi\Authorization\Authorization;
 use Devi\Model\Album\AlbumRepository;
 use Devi\Model\Image\ImageRepository;
 use Devi\Model\User\UserRepository;
+use Devi\Provider\AlbumControllerProvider;
+use Devi\Provider\GetControllerProvider;
+use Devi\Provider\ImageControllerProvider;
+use Devi\Provider\UploadControllerProvider;
+use Devi\Provider\UserControllerProvider;
 use Devi\Storage\Flysystem;
 use Devi\Storage\GzipWrapper;
 use Devi\Utils\Database;
@@ -16,6 +17,8 @@ use Imagine\Gd\Imagine;
 use JDesrosiers\Silex\Provider\CorsServiceProvider;
 use League\Flysystem\Filesystem;
 use Silex\Application;
+use Symfony\Component\Debug\ErrorHandler;
+use Symfony\Component\Debug\ExceptionHandler;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,6 +28,9 @@ use Symfony\Component\Serializer\Normalizer\CustomNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
 use Symfony\Component\Serializer\Serializer;
+
+// Register error handlers
+ErrorHandler::register();
 
 // Create the application with the settings
 $app = new Application(require('settings.php'));
@@ -44,7 +50,7 @@ $app->after(function(Request $request, Response $response) {
   return $response;
 });
 
-// Add exception handlingE
+// Add exception handling
 $app->error(function(Exception $ex) {
   return new JsonResponse([
     'error' => $ex->getMessage(),
@@ -67,7 +73,7 @@ $app['storage'] = function($app) {
   $filesystem = new Filesystem($app['storage.backend']);
   
   return new GzipWrapper(
-    new Flysystem($filesystem,"image-%s.gz"));
+    new Flysystem($filesystem));
 };
 
 // Create the serializer
@@ -112,16 +118,22 @@ $app['albums.provider'] = function($app) {
   return new AlbumControllerProvider($app['albums.repository'],$app['serializer.display']);
 };
 
-// Create the storage provider
-$app['storage.provider'] = function($app) {
-  return new StorageControllerProvider($app['images.repository'],$app['storage']);
+// Create the get provider
+$app['get.provider'] = function($app) {
+  return new GetControllerProvider($app['images.repository'],$app['storage']);
+};
+
+// Create the upload provider
+$app['upload.provider'] = function($app) {
+  return new UploadControllerProvider($app['images.repository'],$app['storage'],$app['serializer.display']);
 };
 
 // Create the controllers
 $app->mount('/users',$app['users.provider']);
 $app->mount('/images',$app['images.provider']);
 $app->mount('/albums',$app['albums.provider']);
-$app->mount('/i',$app['storage.provider']);
+$app->mount('/get',$app['get.provider']);
+$app->mount('/upload',$app['upload.provider']);
 
 // Run the application
 $app->run();
