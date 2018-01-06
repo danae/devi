@@ -6,7 +6,6 @@ use Devi\DeviApplication;
 use Devi\Provider\AlbumControllerProvider;
 use Devi\Provider\ImageControllerProvider;
 use Devi\Provider\StorageControllerProvider;
-use Devi\Provider\UploadControllerProvider;
 use Devi\Provider\UserControllerProvider;
 use Imagine\Gd\Imagine;
 use JDesrosiers\Silex\Provider\CorsServiceProvider;
@@ -90,7 +89,7 @@ $app['api.users'] = function($app) {
   return new UserControllerProvider($app['users'],$app['json_serializer']);
 };
 $app['api.images'] = function($app) {
-  return new ImageControllerProvider($app['images'],$app['json_serializer'],$app['storage']);
+  return new ImageControllerProvider($app['images'],$app['storage'],$app['json_serializer']);
 };
 $app['api.albums'] = function($app) {
   return new AlbumControllerProvider($app['albums'],$app['json_serializer']);
@@ -98,16 +97,12 @@ $app['api.albums'] = function($app) {
 $app['api.storage'] = function($app) {
   return new StorageControllerProvider($app['images'],$app['storage']);
 };
-$app['api.upload'] = function($app) {
-  return new UploadControllerProvider($app['images'],$app['storage'],$app['json_serializer']);
-};
 
 // Create the controllers
 $app->mount('/users',$app['api.users']);
 $app->mount('/images',$app['api.images']);
 $app->mount('/albums',$app['api.albums']);
 $app->mount('/files',$app['api.storage']);
-$app->mount('/upload',$app['api.upload']);
 
 // Run the application
 $app->run();

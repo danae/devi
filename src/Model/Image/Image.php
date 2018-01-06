@@ -126,7 +126,7 @@ class Image implements NormalizableInterface
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
     
     // Get already occupied ids
-    $occupied = $app['images.repository']->findAllIds();
+    $occupied = $app['images']->findAllIds();
     $occupied_order = ceil(log(count($occupied),36)) + 1;
     
     // Set length

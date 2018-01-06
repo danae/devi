@@ -28,7 +28,7 @@ class StorageControllerProvider implements ControllerProviderInterface
   private function respondImage(ImageInterface $image, string $format, string $name, Application $app)
   {
     // Check if the format is supported
-    if (!array_key_exists($format,$app['mimetypes']))
+    if (!in_array($format,$app['mimetypes']))
       $app->abort(415,'The specified format is not supported');
     
     // Get the contents of the image
