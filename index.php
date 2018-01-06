@@ -103,7 +103,6 @@ $app->mount('/users',$app['api.users']);
 $app->mount('/images',$app['api.images']);
 $app->mount('/albums',$app['api.albums']);
 $app->mount('/files',$app['api.files']);
-var_dump($app);
 
 // Run the application
 $app->run();
