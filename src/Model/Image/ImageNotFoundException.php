@@ -1,24 +1,23 @@
 <?php
-namespace Devi\Exception;
+namespace Devi\Model\Image;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class AlbumNotFoundException extends NotFoundHttpException
+class ImageNotFoundException extends NotFoundHttpException
 {
   // Variables
-  private $album;
+  private $image;
   
   // Constructor
-  public function __construct($album)
+  public function __construct($image)
   {
     parent::__construct('The specified image was not found');
-    
-    $this->album = $album;
+    $this->image = $image;
   }
   
-  // Return the album
+  // Return the image
   public function getImage()
   {
-    return $this->album;
+    return $this->image;
   }
 }

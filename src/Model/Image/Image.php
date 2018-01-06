@@ -74,6 +74,8 @@ class Image implements NormalizableInterface
   {
     global $app;
     
+    var_dump($context);
+    
     return [
       'id' => $this->getId(),
       'name' => $this->getName(),
@@ -82,17 +84,16 @@ class Image implements NormalizableInterface
       'createdAt' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
       'modifiedAt' => $normalizer->normalize($this->getModifiedAt(),$format,$context),
       'public' => (bool)$this->isPublic(),
-      'user' => $normalizer->normalize($app['users.repository']->find($this->getUserId()),$format,$context),
-        
+      'user' => $normalizer->normalize($app['users']->find($this->getUserId()),$format,$context),
+      
       // URLs for image blobs
       'imageUrl' => $app['url_generator']->generate('get.image',[
         'image' => $this->getId(),
-        'format' => array_search($this->getContentType(),$app['mimetypes'])
+        'format' => $app['mimetypes'][$this->getContentType()]
       ],UrlGenerator::ABSOLUTE_URL),
       'thumbnailUrl' => $app['url_generator']->generate('get.thumbnail',[
         'image' => $this->getId(),
-        'width' => 150,
-        'height' => 150
+        'width' => 150, 'height' => 150
       ],UrlGenerator::ABSOLUTE_URL)
     ];
   }

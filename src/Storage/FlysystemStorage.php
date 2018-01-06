@@ -6,7 +6,7 @@ use League\Flysystem\Filesystem;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
-class Flysystem implements StorageInterface
+class FlysystemStorage implements StorageInterface
 {
   // Variables
   private $filesystem;

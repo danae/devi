@@ -1,9 +1,8 @@
 <?php
 namespace Devi\Model\Album;
 
-use Devi\Exception\AlbumNotFoundException;
+use Devi\Database\Database;
 use Devi\Model\User\User;
-use Devi\Utils\Database;
 use PDO;
 use Symfony\Component\Serializer\Serializer;
 

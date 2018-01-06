@@ -9,16 +9,16 @@ $settings['db.database'] = 'database';
 // Storage filesystem adapter
 // Update this to a Flysystem storage adapter to store uploaded images
 // For more information visit http://flysystem.thephpleague.com/
-$settings['storage.backend'] = new League\Flysystem\Adapter\Local('store');
+$settings['backend'] = new League\Flysystem\Adapter\Local('store');
 
 // Accepted MIME types
 // Update this to the MIME types you want to accept while uploading, the array
 // consists of the MIME type as key and the default extension as value
 $settings['mimetypes'] = [
-  'png' => 'image/png',
-  'jpg' => 'image/jpeg',
-  'gif' => 'image/gif',
-  'svg' => 'image/svg+xml'
+  'image/png' => 'png',
+  'image/jpeg' => 'jpg',
+  'image/gif' => 'gif',
+  'image/svg+xml' => 'svg'
 ];
 
 // Return the settings

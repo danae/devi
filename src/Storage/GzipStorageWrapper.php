@@ -4,7 +4,7 @@ namespace Devi\Storage;
 use Exception;
 use Symfony\Component\HttpFoundation\Response;
 
-class GzipWrapper implements StorageInterface
+class GzipStorageWrapper implements StorageInterface
 {
   // Constants
   const gz_suffix = ".gz";

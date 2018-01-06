@@ -1,5 +1,5 @@
 <?php
-namespace Devi\Utils;
+namespace Devi\Database;
 
 use PDO;
 

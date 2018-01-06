@@ -8,11 +8,10 @@ use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
-class GetControllerProvider implements ControllerProviderInterface
+class StorageControllerProvider implements ControllerProviderInterface
 {
   // Variables
   private $repository;
@@ -87,7 +86,7 @@ class GetControllerProvider implements ControllerProviderInterface
       ->bind('get.image');
     
     // Thumbnail
-    $controllers->get('/{image}/thumbnail/{width}x{height}.png',[$this,'thumbnail'])
+    $controllers->get('/{image}/{width}x{height}.png',[$this,'thumbnail'])
       ->convert('image',[$this->repository,'find'])
       ->bind('get.thumbnail');
     
