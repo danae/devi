@@ -74,8 +74,6 @@ class Image implements NormalizableInterface
   {
     global $app;
     
-    var_dump($context);
-    
     return [
       'id' => $this->getId(),
       'name' => $this->getName(),
