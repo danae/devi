@@ -117,7 +117,7 @@ class AlbumControllerProvider implements ControllerProviderInterface
     $controllers
       ->post('/',[$this,'post'])
       ->before([$authorization,'authorize'])
-      ->bind('album.post');
+      ->bind('album.collection.post');
     $controllers
       ->get('/{album}',[$this,'get'])
       ->convert('album',[$this->repository,'find'])

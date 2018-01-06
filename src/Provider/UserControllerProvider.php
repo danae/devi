@@ -165,7 +165,7 @@ class UserControllerProvider implements ControllerProviderInterface
     // Create user routes
     $controllers
       ->post('/',[$this,'post'])
-      ->bind('user.post');
+      ->bind('user.collection.post');
     $controllers
       ->get('/{user}',[$this,'get'])
       ->convert('user',[$this->repository,'findByName'])

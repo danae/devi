@@ -4,8 +4,8 @@ require "vendor/autoload.php";
 use Devi\Authorization\Authorization;
 use Devi\DeviApplication;
 use Devi\Provider\AlbumControllerProvider;
+use Devi\Provider\FilesControllerProvider;
 use Devi\Provider\ImageControllerProvider;
-use Devi\Provider\StorageControllerProvider;
 use Devi\Provider\UserControllerProvider;
 use Imagine\Gd\Imagine;
 use JDesrosiers\Silex\Provider\CorsServiceProvider;
@@ -94,15 +94,16 @@ $app['api.images'] = function($app) {
 $app['api.albums'] = function($app) {
   return new AlbumControllerProvider($app['albums'],$app['json_serializer']);
 };
-$app['api.storage'] = function($app) {
-  return new StorageControllerProvider($app['images'],$app['storage']);
+$app['api.files'] = function($app) {
+  return new FilesControllerProvider($app['images'],$app['storage']);
 };
 
 // Create the controllers
 $app->mount('/users',$app['api.users']);
 $app->mount('/images',$app['api.images']);
 $app->mount('/albums',$app['api.albums']);
-$app->mount('/files',$app['api.storage']);
+$app->mount('/files',$app['api.files']);
+var_dump($app);
 
 // Run the application
 $app->run();

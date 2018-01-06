@@ -1,7 +1,6 @@
 <?php
 namespace Devi;
 
-use Devi\Authorization\Authorization;
 use Devi\Database\Database;
 use Devi\Model\Album\AlbumRepository;
 use Devi\Model\Image\ImageRepository;

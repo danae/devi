@@ -62,6 +62,44 @@ class ImageControllerProvider implements ControllerProviderInterface
     $json = $this->serializer->serialize($this->repository->findAll(),'json');
     return JsonResponse::fromJsonString($json);
   }
+  
+  // Create a new image
+  public function post(Request $request)
+  {  
+    // Validate the uploaded file
+    $uploadedFile = $request->files->get('file');
+    $this->validateUploadedFile($uploadedFile);
+  
+    // Create the image
+    $image = Image::create($request->request->get('user'));
+    $stimage = $image->storedAt($this->storage);
+    $stimage->upload($uploadedFile);
+    $this->repository->create($stimage);
+    
+    // Return the image
+    $json = $this->serializer->serialize($stimage,'json');
+    return JsonResponse::fromJsonString($json,201);
+  }
+  
+    // Replace an existing image
+  public function replace(Image $image, Request $request)
+  {
+    // Validate the image
+    $this->validateOwner($image,$request->request->get('user'));
+  
+    // Validate the uploaded file
+    $uploadedFile = $request->files->get('file');
+    $this->validateUploadedFile($uploadedFile);
+
+    // Replace the image
+    $stimage = $image->storedAt($this->storage);
+    $stimage->upload($uploadedFile);
+    $this->repository->update($stimage->setModifiedAt(new DateTime));
+    
+    // Return the image
+    $json = $this->serializer->serialize($stimage,'json');
+    return JsonResponse::fromJsonString($json);
+  }
 
   // Get an existing image
   public function get(Image $image)
@@ -108,44 +146,6 @@ class ImageControllerProvider implements ControllerProviderInterface
     return JsonResponse::fromJsonString($json);
   }
   
-  // Create a new image
-  public function upload(Request $request)
-  {  
-    // Validate the uploaded file
-    $uploadedFile = $request->files->get('file');
-    $this->validateUploadedFile($uploadedFile);
-  
-    // Create the image
-    $image = Image::create($request->request->get('user'));
-    $stimage = $image->storedAt($this->storage);
-    $stimage->upload($uploadedFile);
-    $this->repository->create($stimage);
-    
-    // Return the image
-    $json = $this->serializer->serialize($stimage,'json');
-    return JsonResponse::fromJsonString($json,201);
-  }
-  
-  // Replace an existing image
-  public function replace(Image $image, Request $request)
-  {
-    // Validate the image
-    $this->validateOwner($image,$request->request->get('user'));
-  
-    // Validate the uploaded file
-    $uploadedFile = $request->files->get('file');
-    $this->validateUploadedFile($uploadedFile);
-
-    // Replace the image
-    $stimage = $image->storedAt($this->storage);
-    $stimage->upload($uploadedFile);
-    $this->repository->update($stimage->setModifiedAt(new DateTime));
-    
-    // Return the image
-    $json = $this->serializer->serialize($stimage,'json');
-    return JsonResponse::fromJsonString($json);
-  }
-  
   // Connect to the application
   public function connect(Application $app)
   {    
@@ -163,6 +163,15 @@ class ImageControllerProvider implements ControllerProviderInterface
 
     // Create image routes
     $controllers
+      ->post('/',[$this,'post'])
+      ->before([$authorization,'authorize'])
+      ->bind('image.collection.post');
+    $controllers
+      ->post('/{image}',[$this,'replace'])
+      ->convert('image',[$this->repository,'find'])
+      ->before([$authorization,'authorize'])
+      ->bind('image.post');
+    $controllers
       ->get('/{image}',[$this,'get'])
       ->convert('image',[$this->repository,'find'])
       ->before([$authorization,'optional'])
@@ -176,20 +185,7 @@ class ImageControllerProvider implements ControllerProviderInterface
       ->delete('/{image}',[$this,'delete'])
       ->convert('image',[$this->repository,'find'])
       ->before([$authorization,'authorize'])
-      ->bind('image.delete');
-    
-    // Upload image
-    $controllers
-      ->post('/upload',[$this,'upload'])
-      ->before([$authorization,'authorize'])
-      ->bind('upload.new');
-    
-    // Replace image
-    $controllers
-      ->post('/upload/{image}',[$this,'replace'])
-      ->convert('image',[$this->repository,'find'])
-      ->before([$authorization,'authorize'])
-      ->bind('upload.replace');
+      ->bind('image.delete');    
     
     // Return the controllers
     return $controllers;
