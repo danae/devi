@@ -2,16 +2,16 @@
 namespace Devi\Model\Album;
 
 use DateTime;
-use Devi\Model\ModifiableTrait;
-use Devi\Model\OwnableTrait;
+use Devi\Model\ModificationAwareTrait;
+use Devi\Model\UserAwareTrait;
 use Devi\Model\User\User;
 use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class Album implements NormalizableInterface
 {
-  use ModifiableTrait;
-  use OwnableTrait;
+  use ModificationAwareTrait;
+  use UserAwareTrait;
   
   // Variables
   private $id;
@@ -53,12 +53,14 @@ class Album implements NormalizableInterface
     global $app;
     
     return [
+      'type' => 'album',
+      
       'id' => $this->getId(),
       'name' => $this->getName(),
       'createdAt' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
       'modifiedAt' => $normalizer->normalize($this->getModifiedAt(),$format,$context),
       'public' => (bool)$this->isPublic(),
-      'user' => $normalizer->normalize($app['users.repository']->find($this->getUserId()),$format,$context)
+      'user' => $normalizer->normalize($app['users']->find($this->getUserId()),$format,$context)
     ];
   }
   
@@ -84,7 +86,7 @@ class Album implements NormalizableInterface
     $pattern = '0123456789abcdefghijklmnopqrstuvwxyz';
     
     // Get already occupied ids
-    $occupied = $app['albums.repository']->findAllIds();
+    $occupied = $app['albums']->findAllIds();
     $occupied_order = ceil(log(count($occupied),36)) + 1;
     
     // Set length

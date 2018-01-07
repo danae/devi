@@ -3,8 +3,6 @@ namespace Devi\Provider;
 
 use DateTime;
 use Devi\Model\Image\Image;
-use Devi\Model\Image\ImageRepositoryInterface;
-use Devi\Storage\StorageInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,23 +11,9 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\UnsupportedMediaTypeHttpException;
-use Symfony\Component\Serializer\Serializer;
 
 class ImageControllerProvider implements ControllerProviderInterface
 {
-  // Variables
-  private $repository;
-  private $serializer;
-  private $storage;
-  
-  // Constructor
-  public function __construct(ImageRepositoryInterface $repository, StorageInterface $storage, Serializer $serializer)
-  {
-    $this->repository = $repository;
-    $this->storage = $storage;
-    $this->serializer = $serializer;
-  }
-  
   // Validate the owner of an image
   public function validateOwner(Image $image, $authorized)
   {
@@ -56,15 +40,17 @@ class ImageControllerProvider implements ControllerProviderInterface
   }
   
   // Get all existing images
-  public function getAll()
+  public function getAll(Application $app)
   {
+    $images = $app['images']->findAll();
+    
     // Return all images
-    $json = $this->serializer->serialize($this->repository->findAll(),'json');
+    $json = $app['json_serializer']->serialize($images,'json');
     return JsonResponse::fromJsonString($json);
   }
   
   // Create a new image
-  public function post(Request $request)
+  public function post(Application $app, Request $request)
   {  
     // Validate the uploaded file
     $uploadedFile = $request->files->get('file');
@@ -72,17 +58,17 @@ class ImageControllerProvider implements ControllerProviderInterface
   
     // Create the image
     $image = Image::create($request->request->get('user'));
-    $stimage = $image->storedAt($this->storage);
+    $stimage = $image->storedAt($app['storage']);
     $stimage->upload($uploadedFile);
-    $this->repository->create($stimage);
+    $app['images']->create($stimage);
     
     // Return the image
-    $json = $this->serializer->serialize($stimage,'json');
+     $json = $app['json_serializer']->serialize($stimage,'json');
     return JsonResponse::fromJsonString($json,201);
   }
   
     // Replace an existing image
-  public function replace(Image $image, Request $request)
+  public function replace(Application $app, Request $request, Image $image)
   {
     // Validate the image
     $this->validateOwner($image,$request->request->get('user'));
@@ -92,25 +78,25 @@ class ImageControllerProvider implements ControllerProviderInterface
     $this->validateUploadedFile($uploadedFile);
 
     // Replace the image
-    $stimage = $image->storedAt($this->storage);
+    $stimage = $image->storedAt($app['storage']);
     $stimage->upload($uploadedFile);
-    $this->repository->update($stimage->setModifiedAt(new DateTime));
+    $app['images']->update($stimage->setModifiedAt(new DateTime));
     
     // Return the image
-    $json = $this->serializer->serialize($stimage,'json');
+    $json = $app['json_serializer']->serialize($stimage,'json');
     return JsonResponse::fromJsonString($json);
   }
 
   // Get an existing image
-  public function get(Image $image)
+  public function get(Application $app, Image $image)
   {
     // Return the image
-    $json = $this->serializer->serialize($image,'json');
+    $json = $app['json_serializer']->serialize($image,'json');
     return JsonResponse::fromJsonString($json);
   }
 
   // Update an existing image
-  public function patch(Image $image, Request $request)
+  public function patch(Application $app, Request $request, Image $image)
   {
     // Validate the image
     $this->validateOwner($image,$request->request->get('user'));
@@ -122,70 +108,61 @@ class ImageControllerProvider implements ControllerProviderInterface
       $image->setPublic((boolean)$request->request->get('public'));
   
     // Update the updated image in the database
-    $this->repository->update($image->setModifiedAt(new DateTime));
+    $app['images']->update($image->setModifiedAt(new DateTime));
   
     // Return the image
-    $json = $this->serializer->serialize($image,'json');
+    $json = $app['json_serializer']->serialize($image,'json');
     return JsonResponse::fromJsonString($json);
   }
 
   // Delete an existing image
-  public function delete(Image $image, Request $request)
+  public function delete(Application $app, Request $request, Image $image)
   {
     // Validate the image
     $this->validateOwner($image,$request->request->get('user'));
   
     // Delete the image
-    $this->repository->delete($image);
+    $app['images']->delete($image);
     
     // Delete the image from the storage
-    $this->storage->delete($image->getId());
+    $app['storage']->delete($image->getId());
   
     // Return the image
-    $json = $this->serializer->serialize($image,'json');
+    $json = $app['json_serializer']->serialize($image,'json');
     return JsonResponse::fromJsonString($json);
   }
   
   // Connect to the application
   public function connect(Application $app)
   {    
-    // Get the authorization
-    $authorization = $app['authorization'];
-
     // Create controllers
     $controllers = $app['controllers_factory'];
     
     // Create image collection routes
-    $controllers
-      ->get('/',[$this,'getAll'])
-      ->before([$authorization,'optional'])
-      ->bind('image.collection.get');
+    $controllers->get('/images/',[$this,'getAll'])
+      ->before('authorization:optional')
+      ->bind('route.images.collection.get');
 
     // Create image routes
-    $controllers
-      ->post('/',[$this,'post'])
-      ->before([$authorization,'authorize'])
-      ->bind('image.collection.post');
-    $controllers
-      ->post('/{image}',[$this,'replace'])
-      ->convert('image',[$this->repository,'find'])
-      ->before([$authorization,'authorize'])
-      ->bind('image.post');
-    $controllers
-      ->get('/{image}',[$this,'get'])
-      ->convert('image',[$this->repository,'find'])
-      ->before([$authorization,'optional'])
-      ->bind('image.get');
-    $controllers
-      ->patch('/{image}',[$this,'patch'])
-      ->convert('image',[$this->repository,'find'])
-      ->before([$authorization,'authorize'])
-      ->bind('image.patch');
-    $controllers
-      ->delete('/{image}',[$this,'delete'])
-      ->convert('image',[$this->repository,'find'])
-      ->before([$authorization,'authorize'])
-      ->bind('image.delete');    
+    $controllers->post('/images/',[$this,'post'])
+      ->before('authorization:optional')
+      ->bind('route.images.collection.post');
+    $controllers->post('/images/{image}',[$this,'replace'])
+      ->convert('image','images:find')
+      ->before('authorization:authorize')
+      ->bind('route.images.post');
+    $controllers->get('/images/{image}',[$this,'get'])
+      ->convert('image','images:find')
+      ->before('authorization:optional')
+      ->bind('route.images.get');
+    $controllers->patch('/images/{image}',[$this,'patch'])
+      ->convert('image','images:find')
+      ->before('authorization:authorize')
+      ->bind('route.images.patch');
+    $controllers->delete('/images/{image}',[$this,'delete'])
+      ->convert('image','images:find')
+      ->before('authorization:authorize')
+      ->bind('route.images.delete');    
     
     // Return the controllers
     return $controllers;

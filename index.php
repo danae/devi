@@ -9,7 +9,6 @@ use Devi\Provider\ImageControllerProvider;
 use Devi\Provider\UserControllerProvider;
 use Imagine\Gd\Imagine;
 use JDesrosiers\Silex\Provider\CorsServiceProvider;
-use Symfony\Component\Debug\ErrorHandler;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,7 +19,7 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 // Register error handlers
-ErrorHandler::register();
+//ErrorHandler::register();
 
 // Create the application with the settings
 $app = new DeviApplication(require('settings.php'));
@@ -85,24 +84,24 @@ $app['imagine'] = function() {
 };
 
 // Create the providers for the models
-$app['api.users'] = function($app) {
-  return new UserControllerProvider($app['users'],$app['json_serializer']);
+$app['user_controller'] = function() {
+  return new UserControllerProvider();
 };
-$app['api.images'] = function($app) {
-  return new ImageControllerProvider($app['images'],$app['storage'],$app['json_serializer']);
+$app['image_controller'] = function($app) {
+  return new ImageControllerProvider();
 };
-$app['api.albums'] = function($app) {
-  return new AlbumControllerProvider($app['albums'],$app['json_serializer']);
+$app['album_controller'] = function($app) {
+  return new AlbumControllerProvider();
 };
-$app['api.files'] = function($app) {
-  return new FilesControllerProvider($app['images'],$app['storage']);
+$app['files_controller'] = function($app) {
+  return new FilesControllerProvider();
 };
 
 // Create the controllers
-$app->mount('/users',$app['api.users']);
-$app->mount('/images',$app['api.images']);
-$app->mount('/albums',$app['api.albums']);
-$app->mount('/files',$app['api.files']);
+$app->mount('/',$app['user_controller']);
+$app->mount('/',$app['image_controller']);
+$app->mount('/',$app['album_controller']);
+$app->mount('/',$app['files_controller']);
 
 // Run the application
 $app->run();

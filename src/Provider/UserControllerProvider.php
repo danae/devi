@@ -3,28 +3,15 @@ namespace Devi\Provider;
 
 use DateTime;
 use Devi\Model\User\User;
-use Devi\Model\User\UserRepositoryInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Serializer\Serializer;
 
 class UserControllerProvider implements ControllerProviderInterface
 {
-  // Variables
-  private $repository;
-  private $serializer;
-  
-  // Constructor
-  public function __construct(UserRepositoryInterface $repository, Serializer $serializer)
-  {
-    $this->repository = $repository;
-    $this->serializer = $serializer;
-  }
-  
   // Validate the current user
   public function validateCurrent(User $user, Request $request)
   {
@@ -48,15 +35,17 @@ class UserControllerProvider implements ControllerProviderInterface
   }
   
   // Get all extisting users
-  public function getAll()
+  public function getAll(Application $app)
   {
+    $users = $app['users']->findAll();
+    
     // Return all users
-    $json = $this->serializer->serialize($this->repository->findAll(),'json');
+    $json = $app['json_serializer']->serialize($users,'json');
     return JsonResponse::fromJsonString($json);
   }
   
   // Create a new user
-  public function post(Request $request)
+  public function post(Application $app, Request $request)
   {
     // Validate the parameters
     if (!$request->request->has('name'))
@@ -74,23 +63,23 @@ class UserControllerProvider implements ControllerProviderInterface
     );
   
     // Put the user in the database
-    $this->repository->create($user);
+    $app['users']->create($user);
     
     // Return the created user
-    $json = $this->serializer->serialize($user,'json');
+    $json = $app['json_serializer']->serialize($user,'json');
     return JsonResponse::fromJsonString($json,201);
   }
   
   // Get an existing user
-  public function get(User $user)
+  public function get(Application $app, User $user)
   {
     // Return the user
-    $json = $this->serializer->serialize($user,'json');
+    $json = $app['json_serializer']->serialize($user,'json');
     return JsonResponse::fromJsonString($json);
   }
 
   // Patch an existing user
-  public function patch(User $user, Request $request)
+  public function patch(Application $app, Request $request, User $user)
   {
     // Validate the user
     $this->validateCurrent($user,$request);
@@ -106,87 +95,72 @@ class UserControllerProvider implements ControllerProviderInterface
       $user->setPublic($request->request->get('public'));
 
     // Patch the updated user in the database
-    $this->repository->update($user->setModifiedAt(new DateTime));
+    $app['users']->update($user->setModifiedAt(new DateTime));
 
     // Return the user
-    $json = $this->serializer->serialize($user,'json');
+    $json = $app['json_serializer']->serialize($user,'json');
     return JsonResponse::fromJsonString($json);
   }
   
   // Delete an existing user
-  public function delete(User $user, Request $request)
+  public function delete(Application $app, Request $request, User $user)
   {
     // Validate the user
     $this->validateCurrent($user,$request);
   
     // Delete the user
-    $this->repository->delete($user);
+    $app['users']->delete($user);
   
     // Return the user
-    $json = $this->serializer->serialize($user,'json');
+    $json = $app['json_serializer']->serialize($user,'json');
     return JsonResponse::fromJsonString($json);
   }
   
   // Get all images of a user
-  public function getAllImages(User $user, Request $request)
+  public function getAllImages(Application $app, Request $request, User $user)
   {
-    global $app;
-    
     // Return the images
     if ($this->checkCurrent($user,$request))
-    {
-      // Return all images
-      $json = $this->serializer->serialize($app['images.repository']->findAllByUser($user),'json');
-      return JsonResponse::fromJsonString($json);
-    }
+      $images = $app['images']->findAllByUser($user);
     else
-    {
-      // Return only public images
-      $json = $this->serializer->serialize($app['images.repository']->findAllPublicByUser($user),'json');
-      return JsonResponse::fromJsonString($json);
-    }
+      $images = $app['images']->findAllPublicByUser($user);
+    
+    // Return the images
+    $json = $app['json_serializer']->serialize($images,'json');
+    return JsonResponse::fromJsonString($json);
   }
   
   // Connect to the application
   public function connect(Application $app)
   {
-    // Get the authorization
-    $authorization = $app['authorization'];
-    
     // Create controllers
     $controllers = $app['controllers_factory'];
     
     // Create user collection routes
-    $controllers
-      ->get('/',[$this,'getAll'])
-      ->before([$authorization,'optional'])
-      ->bind('user.collection.get');
+    $controllers->get('/users/',[$this,'getAll'])
+      ->before('authorization:optional')
+      ->bind('route.users.collection.get');
 
     // Create user routes
-    $controllers
-      ->post('/',[$this,'post'])
+    $controllers->post('/users/',[$this,'post'])
       ->bind('user.collection.post');
-    $controllers
-      ->get('/{user}',[$this,'get'])
-      ->convert('user',[$this->repository,'findByName'])
-      ->before([$authorization,'optional'])
-      ->bind('user.get');
-    $controllers
-      ->patch('/{user}',[$this,'patch'])
-      ->convert('user',[$this->repository,'findByName'])
-      ->before([$authorization,'authorize'])
-      ->bind('user.patch');
-    $controllers
-      ->delete('/{user}',[$this,'delete'])
-      ->convert('user',[$this->repository,'findByName'])
-      ->before([$authorization,'authorize'])
-      ->bind('user.delete');
+    $controllers->get('/users/{user}',[$this,'get'])
+      ->convert('user','users:findByName')
+      ->before('authorization:optional')
+      ->bind('route.users.get');
+    $controllers->patch('/users/{user}',[$this,'patch'])
+      ->convert('user','users:findByName')
+      ->before('authorization:authorize')
+      ->bind('route.users.patch');
+    $controllers->delete('/users/{user}',[$this,'delete'])
+      ->convert('user','users:findByName')
+      ->before('authorization:authorize')
+      ->bind('route.users.delete');
     
     // Create user images routes
-    $controllers
-      ->get('/{user}/images/',[$this,'getAllImages'])
-      ->convert('user',[$this->repository,'findByName'])
-      ->before([$authorization,'optional']);
+    $controllers->get('/users/{user}/images/',[$this,'getAllImages'])
+      ->convert('user','users:findByName')
+      ->before('authorization:optional');
     
     // Return the controllers
     return $controllers;

@@ -2,8 +2,8 @@
 namespace Devi\Model\Image;
 
 use DateTime;
-use Devi\Model\ModifiableTrait;
-use Devi\Model\OwnableTrait;
+use Devi\Model\ModificationAwareTrait;
+use Devi\Model\UserAwareTrait;
 use Devi\Model\User\User;
 use Devi\Storage\StorageInterface;
 use Symfony\Component\Routing\Generator\UrlGenerator;
@@ -12,8 +12,8 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class Image implements NormalizableInterface
 {
-  use ModifiableTrait;
-  use OwnableTrait;
+  use ModificationAwareTrait;
+  use UserAwareTrait;
   
   // Variables
   private $id;
@@ -75,6 +75,8 @@ class Image implements NormalizableInterface
     global $app;
     
     return [
+      'type' => 'image',
+      
       'id' => $this->getId(),
       'name' => $this->getName(),
       'contentType' => $this->getContentType(),
@@ -85,14 +87,14 @@ class Image implements NormalizableInterface
       'user' => $normalizer->normalize($app['users']->find($this->getUserId()),$format,$context),
       
       // URLs for image blobs
-      'imageUrl' => $app['url_generator']->generate('get.image',[
+      'imageUrl' => $app['url_generator']->generate('route.files.image',[
         'image' => $this->getId(),
         'format' => $app['mimetypes'][$this->getContentType()]
       ],UrlGenerator::ABSOLUTE_URL),
-      'thumbnailUrl' => $app['url_generator']->generate('get.thumbnail',[
+      'thumbnailUrl' => $app['url_generator']->generate('route.files.thumbnail',[
         'image' => $this->getId(),
         'width' => 150, 'height' => 150
-      ],UrlGenerator::ABSOLUTE_URL)
+      ],UrlGenerator::ABSOLUTE_URL),
     ];
   }
   

@@ -4,7 +4,7 @@ namespace Devi\Model;
 use DateTime;
 use InvalidArgumentException;
 
-trait ModifiableTrait
+trait ModificationAwareTrait
 {
   // Variables
   protected $createdAt;

@@ -2,8 +2,6 @@
 namespace Devi\Provider;
 
 use Devi\Model\Image\Image;
-use Devi\Model\Image\ImageRepositoryInterface;
-use Devi\Storage\StorageInterface;
 use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
 use Silex\Api\ControllerProviderInterface;
@@ -13,19 +11,8 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class FilesControllerProvider implements ControllerProviderInterface
 {
-  // Variables
-  private $repository;
-  private $storage;
-  
-  // Constructor
-  public function __construct(ImageRepositoryInterface $repository, StorageInterface $storage)
-  {
-    $this->repository = $repository;
-    $this->storage = $storage;
-  }
-  
   // Respond with an imagine image
-  private function respondImage(ImageInterface $image, string $format, string $name, Application $app)
+  private function respondImage(Application $app, ImageInterface $image, string $format, string $name)
   {
     // Check if the format is supported
     if (!in_array($format,$app['mimetypes']))
@@ -47,31 +34,31 @@ class FilesControllerProvider implements ControllerProviderInterface
   }
   
   // Raw image
-  public function raw(Image $image, string $format, Application $app)
+  public function raw(Application $app, Image $image, string $format)
   {
     // Get the MIME type of the image
-    $mimetype = $this->storage->getMimeType($image->getId());
+    $mimetype = $app['storage']->getMimeType($image->getId());
     
     // Check if the mimetype equals the requested format
     if ($app['mimetypes'][$format] === $mimetype)
-      return $this->storage->respond($image->getId(),$image->getName());
+      return $app['storage']->respond($image->getId(),$image->getName());
     
     // Get the contents of the stream
     $imagine = $app['imagine'];
-    $img = $imagine->read($this->storage->readStream($image->getId()));
+    $img = $imagine->read($app['storage']->readStream($image->getId()));
     
     //return new JsonResponse(["mimetype" => $mimetype]);
-    return $this->respondImage($img,$format,$image->getName(),$app);
+    return $this->respondImage($app,$img,$format,$image->getName());
   }
   
   // Thumbnail
-  public function thumbnail(Image $image, int $width, int $height, Application $app)
+  public function thumbnail(Application $app, Image $image, int $width, int $height)
   {
     $imagine = $app['imagine'];
     $img = $imagine->read($this->storage->readStream($image->getId()));
     $img = $img->thumbnail(new Box($width,$height),ImageInterface::THUMBNAIL_OUTBOUND);
     
-    return $this->respondImage($img,'png',sprintf('%s_%dx%d.png',$image->getName(),$width,$height),$app);
+    return $this->respondImage($app,$img,'png',sprintf('%s_%dx%d.png',$image->getName(),$width,$height));
   }
     
   // Connect
@@ -81,14 +68,14 @@ class FilesControllerProvider implements ControllerProviderInterface
     $controllers = $app['controllers_factory'];
     
     // Raw image
-    $controllers->get('/{image}.{format}',[$this,'raw'])
-      ->convert('image',[$this->repository,'find'])
-      ->bind('get.image');
+    $controllers->get('/files/{image}.{format}',[$this,'raw'])
+      ->convert('image','images:find')
+      ->bind('route.files.image');
     
     // Thumbnail
-    $controllers->get('/{image}/{width}x{height}.png',[$this,'thumbnail'])
-      ->convert('image',[$this->repository,'find'])
-      ->bind('get.thumbnail');
+    $controllers->get('/files/{image}/{width}x{height}.png',[$this,'thumbnail'])
+      ->convert('image','images:find')
+      ->bind('route.files.thumbnail');
     
     // Return the controllers
     return $controllers;

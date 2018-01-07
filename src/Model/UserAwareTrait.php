@@ -1,7 +1,7 @@
 <?php
 namespace Devi\Model;
 
-trait OwnableTrait
+trait UserAwareTrait
 {
   // Variables
   protected $userId;

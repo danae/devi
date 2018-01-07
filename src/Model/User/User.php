@@ -2,14 +2,14 @@
 namespace Devi\Model\User;
 
 use DateTime;
-use Devi\Model\ModifiableTrait;
+use Devi\Model\ModificationAwareTrait;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Serializer\Normalizer\NormalizableInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class User implements NormalizableInterface
 {
-  use ModifiableTrait;
+  use ModificationAwareTrait;
   
   // Variables
   private $id;
@@ -79,6 +79,8 @@ class User implements NormalizableInterface
   public function normalize(NormalizerInterface $normalizer, $format = null, array $context = []): array
   {
     return [
+      'type' => 'user',
+      
       'name' => $this->getName(),
       'email' => $this->getEmail(),
       'createdAt' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
@@ -92,7 +94,7 @@ class User implements NormalizableInterface
     global $app;
     
     // Get already occupied names
-    $occupied = $app['users.repository']->findAllIds();
+    $occupied = $app['users']->findAllIds();
     if (in_array($name,$occupied))
       throw new PreconditionFailedHttpException('User name already in use');
     

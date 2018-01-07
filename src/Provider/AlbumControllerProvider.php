@@ -3,27 +3,14 @@ namespace Devi\Provider;
 
 use DateTime;
 use Devi\Model\Album\Album;
-use Devi\Model\Album\AlbumRepositoryInterface;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\Serializer\Serializer;
 
 class AlbumControllerProvider implements ControllerProviderInterface
 {
-  // Variables
-  private $repository;
-  private $serializer;
-  
-  // Constructor
-  public function __construct(AlbumRepositoryInterface $repository, Serializer $serializer)
-  {
-    $this->repository = $repository;
-    $this->serializer = $serializer;
-  }
-  
   // Validate the owner of an album
   public function validateOwner(Album $album, $authorized)
   {
@@ -35,15 +22,17 @@ class AlbumControllerProvider implements ControllerProviderInterface
   }
   
   // Get all extisting albums
-  public function getAll()
+  public function getAll(Application $app)
   {
+    $albums = $app['albums']->findAll();
+    
     // Return all users
-    $json = $this->serializer->serialize($this->repository->findAll(),'json');
+    $json = $app['json_serializer']->serialize($albums,'json');
     return JsonResponse::fromJsonString($json);
   }
   
   // Create a new album
-  public function post(Request $request)
+  public function post(Application $app, Request $request)
   {
     // Create the album
     $album = Album::create($request->request->get('user'));
@@ -52,20 +41,20 @@ class AlbumControllerProvider implements ControllerProviderInterface
     $this->repository->create($album);
     
     // Return the created user
-    $json = $this->serializer->serialize($album,'json');
+    $json = $app['json_serializer']->serialize($album,'json');
     return JsonResponse::fromJsonString($json,201);
   }
   
   // Get an existing album
-  public function get($album)
+  public function get(Application $app, Album $album)
   {
     // Return the user
-    $json = $this->serializer->serialize($album,'json');
+    $json = $app['json_serializer']->serialize($album,'json');
     return JsonResponse::fromJsonString($json);
   }
 
   // Patch an existing album
-  public function patch($album, Request $request)
+  public function patch(Application $app, Request $request, Album $album)
   {
     // Validate the album
     $this->validateOwner($album,$request->request->get('user'));
@@ -79,13 +68,13 @@ class AlbumControllerProvider implements ControllerProviderInterface
     // Update the updated album in the database
     $this->repository->update($album->setModifiedAt(new DateTime));
   
-    // Return the image
-    $json = $this->serializer->serialize($album,'json');
+    // Return the album
+    $json = $app['json_serializer']->serialize($album,'json');
     return JsonResponse::fromJsonString($json);
   }
   
   // Delete an existing album
-  public function delete($album, Request $request)
+  public function delete(Application $app, Request $request, Album $album)
   {
     // Validate the user
     $this->validateOwner($album,$request->request->get('user'));
@@ -94,45 +83,38 @@ class AlbumControllerProvider implements ControllerProviderInterface
     $this->repository->delete($album);
   
     // Return the user
-    $json = $this->serializer->serialize($album,'json');
+    $json = $app['json_serializer']->serialize($album,'json');
     return JsonResponse::fromJsonString($json);
   }
   
   // Connect to the application
   public function connect(Application $app)
   {
-    // Get the authorization
-    $authorization = $app['authorization'];
-    
     // Create controllers
     $controllers = $app['controllers_factory'];
     
     // Create album collection routes
     $controllers
-      ->get('/',[$this,'getAll'])
-      ->before([$authorization,'optional'])
-      ->bind('album.collection.get');
+      ->get('/albums/',[$this,'getAll'])
+      ->before('authorization:optional')
+      ->bind('route.albums.collection.get');
 
     // Create album routes
-    $controllers
-      ->post('/',[$this,'post'])
-      ->before([$authorization,'authorize'])
-      ->bind('album.collection.post');
-    $controllers
-      ->get('/{album}',[$this,'get'])
-      ->convert('album',[$this->repository,'find'])
-      ->before([$authorization,'optional'])
-      ->bind('album.get');
-    $controllers
-      ->patch('/{album}',[$this,'patch'])
-      ->convert('album',[$this->repository,'find'])
-      ->before([$authorization,'authorize'])
-      ->bind('album.patch');
-    $controllers
-      ->delete('/{album}',[$this,'delete'])
-      ->convert('album',[$this->repository,'find'])
-      ->before([$authorization,'authorize'])
-      ->bind('album.delete');
+    $controllers->post('/',[$this,'post'])
+      ->before('authorization:authorize')
+      ->bind('route.albums.collection.post');
+    $controllers ->get('/{album}',[$this,'get'])
+      ->convert('album','albums:find')
+      ->before('authorization:optional')
+      ->bind('route.albums.get');
+    $controllers->patch('/{album}',[$this,'patch'])
+      ->convert('album','albums:find')
+      ->before('authorization:authorize')
+      ->bind('route.albums.patch');
+    $controllers->delete('/{album}',[$this,'delete'])
+      ->convert('album','albums:find')
+      ->before('authorization:authorize')
+      ->bind('route.albums.delete');
     
     // Return the controllers
     return $controllers;

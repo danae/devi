@@ -33,10 +33,12 @@
     
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script>
-      var baseUrl = '/Devi/';
+      var baseUrl = '/php/devi/';
       
       $('#upload').submit(function(e) {
         e.preventDefault();
+        
+        $('#output').html('');
         
         $.ajaxSetup({
           async: false,
@@ -56,20 +58,20 @@
         // Create a user
         $.ajax({
           method: 'POST',
-          url: baseUrl + 'users/',
+          url: baseUrl + 'users/' + '?debug=true',
           data: {name: 'devi', email: 'info@devi.im', password: '1234'}
         });
         
         // Get a user
         $.ajax({
           method: 'GET',
-          url: baseUrl + 'users/devi'
+          url: baseUrl + 'users/devi' + '?debug=true'
         });
         
         // Patch a user
         $.ajax({
           method: 'PATCH',
-          url: baseUrl + 'users/devi',
+          url: baseUrl + 'users/devi' + '?debug=true',
           data: {email: 'support@devi.im'},
           beforeSend: function(xhr) {
             xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
@@ -81,7 +83,7 @@
         fd.append('file',document.getElementById('file').files[0]);
         $.ajax({
           method: 'POST',
-          url: baseUrl + 'upload/',
+          url: baseUrl + 'images/' + '?debug=true',
           data: fd,
           processData: false,
           contentType: false,
@@ -92,13 +94,13 @@
           // Get a user's images
           $.ajax({
             method: 'GET',
-            url: baseUrl + 'users/devi/images/'
+            url: baseUrl + 'users/devi/images/' + '?debug=true'
           });
         
           // Get an image
           $.ajax({
             method: 'GET',
-            url: baseUrl + 'images/' + image.id
+            url: baseUrl + 'images/' + image.id + '?debug=true'
           });
         
           // Patch an image
@@ -115,13 +117,13 @@
           // Get an image
           $.ajax({
             method: 'GET',
-            url: baseUrl + 'get/' + image.id + '.png'
+            url: baseUrl + 'files/' + image.id + '.png' + '?debug=true'
           });
           
           // Create an album
           $.ajax({
             method: 'POST',
-            url: baseUrl + 'albums/',
+            url: baseUrl + 'albums/' + '?debug=true',
             data: {name: 'Uploaded Images', public: false},
             beforeSend: function(xhr) {
               xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
@@ -130,13 +132,13 @@
             // Get an album
             $.ajax({
               method: 'GET',
-              url: baseUrl + 'albums/' + album.id
+              url: baseUrl + 'albums/' + album.id + '?debug=true'
             });
             
             // Patch an album
             $.ajax({
               method: 'PATCH',
-              url: baseUrl + 'albums/' + album.id,
+              url: baseUrl + 'albums/' + album.id + '?debug=true',
               data: {name: 'New Album', public: true},
               beforeSend: function(xhr) {
                 xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
@@ -146,7 +148,7 @@
             // Delete an album
             $.ajax({
               method: 'DELETE',
-              url: baseUrl + 'albums/' + album.id,
+              url: baseUrl + 'albums/' + album.id + '?debug=true',
               beforeSend: function(xhr) {
                 xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
               }
@@ -156,7 +158,7 @@
           // Delete an image
           $.ajax({
             method: 'DELETE',
-            url: baseUrl + 'images/' + image.id,
+            url: baseUrl + 'images/' + image.id + '?debug=true',
             beforeSend: function(xhr) {
               xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
             }
@@ -166,7 +168,7 @@
         // Delete a user
         $.ajax({
           method: 'DELETE',
-          url: baseUrl + 'users/devi',
+          url: baseUrl + 'users/devi' + '?debug=true',
           beforeSend: function(xhr) {
             xhr.setRequestHeader("Authorization","Basic " + btoa('devi:1234'));
           }
