@@ -116,20 +116,6 @@ class UserControllerProvider implements ControllerProviderInterface
     return JsonResponse::fromJsonString($json);
   }
   
-  // Get all images of a user
-  public function getAllImages(Application $app, Request $request, User $user)
-  {
-    // Return the images
-    if ($this->checkCurrent($user,$request))
-      $images = $app['images']->findAllByUser($user);
-    else
-      $images = $app['images']->findAllPublicByUser($user);
-    
-    // Return the images
-    $json = $app['json_serializer']->serialize($images,'json');
-    return JsonResponse::fromJsonString($json);
-  }
-  
   // Connect to the application
   public function connect(Application $app)
   {
@@ -156,11 +142,6 @@ class UserControllerProvider implements ControllerProviderInterface
       ->convert('user','users:findByName')
       ->before('authorization:authorize')
       ->bind('route.users.delete');
-    
-    // Create user images routes
-    $controllers->get('/users/{user}/images/',[$this,'getAllImages'])
-      ->convert('user','users:findByName')
-      ->before('authorization:optional');
     
     // Return the controllers
     return $controllers;

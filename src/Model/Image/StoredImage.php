@@ -16,6 +16,8 @@ class StoredImage extends Image
   {
     $this->setId($image->getId());
     $this->setName($image->getName());
+    $this->setWidth($image->getWidth());
+    $this->setHeight($image->getHeight());
     $this->setContentType($image->getContentType());
     $this->setContentLength($image->getContentLength());
     $this->setCreatedAt($image->getCreatedAt());
@@ -34,9 +36,14 @@ class StoredImage extends Image
     $this->storage->writeStream($this->getId(),$stream);
     fclose($stream);
     
+    // Get the image size
+    list($width,$height) = getimagesize($file->getPathname());
+    
     // Return the updated file
     return $this
       ->setName($name ?? ($file->getClientOriginalName() ?? $this->getName()))
+      ->setWidth($width)
+      ->setHeight($height)
       ->setContentType($file->getMimeType())
       ->setContentLength($file->getSize());
   }

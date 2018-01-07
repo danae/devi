@@ -3,6 +3,7 @@ namespace Devi\Provider;
 
 use DateTime;
 use Devi\Model\Image\Image;
+use Devi\Model\User\User;
 use Silex\Api\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -63,7 +64,7 @@ class ImageControllerProvider implements ControllerProviderInterface
     $app['images']->create($stimage);
     
     // Return the image
-     $json = $app['json_serializer']->serialize($stimage,'json');
+    $json = $app['json_serializer']->serialize($stimage,'json');
     return JsonResponse::fromJsonString($json,201);
   }
   
@@ -132,6 +133,16 @@ class ImageControllerProvider implements ControllerProviderInterface
     return JsonResponse::fromJsonString($json);
   }
   
+  // Get all images of a user
+  public function getAllByUser(Application $app, User $user)
+  {
+    $images = $app['images']->findAllPublicByUser($user);
+    
+    // Return the images
+    $json = $app['json_serializer']->serialize($images,'json');
+    return JsonResponse::fromJsonString($json);
+  }
+  
   // Connect to the application
   public function connect(Application $app)
   {    
@@ -163,6 +174,11 @@ class ImageControllerProvider implements ControllerProviderInterface
       ->convert('image','images:find')
       ->before('authorization:authorize')
       ->bind('route.images.delete');    
+    
+    // Create user images routes
+    $controllers->get('/users/{user}/images/',[$this,'getAllByUser'])
+      ->convert('user','users:findByName')
+      ->before('authorization:optional');
     
     // Return the controllers
     return $controllers;

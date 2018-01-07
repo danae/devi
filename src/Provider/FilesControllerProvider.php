@@ -55,7 +55,7 @@ class FilesControllerProvider implements ControllerProviderInterface
   public function thumbnail(Application $app, Image $image, int $width, int $height)
   {
     $imagine = $app['imagine'];
-    $img = $imagine->read($this->storage->readStream($image->getId()));
+    $img = $imagine->read($app['storage']->readStream($image->getId()));
     $img = $img->thumbnail(new Box($width,$height),ImageInterface::THUMBNAIL_OUTBOUND);
     
     return $this->respondImage($app,$img,'png',sprintf('%s_%dx%d.png',$image->getName(),$width,$height));

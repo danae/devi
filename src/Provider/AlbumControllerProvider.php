@@ -100,7 +100,7 @@ class AlbumControllerProvider implements ControllerProviderInterface
       ->bind('route.albums.collection.get');
 
     // Create album routes
-    $controllers->post('/',[$this,'post'])
+    $controllers->post('/albums/',[$this,'post'])
       ->before('authorization:authorize')
       ->bind('route.albums.collection.post');
     $controllers ->get('/{album}',[$this,'get'])

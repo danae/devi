@@ -18,6 +18,8 @@ class Image implements NormalizableInterface
   // Variables
   private $id;
   private $name;
+  private $width;
+  private $height;
   private $contentType;
   private $contentLength;
   private $public;
@@ -39,6 +41,24 @@ class Image implements NormalizableInterface
   public function setName(string $name): self
   {
     $this->name = $name;
+    return $this;
+  }
+  public function getWidth(): int
+  {
+    return $this->width;
+  }
+  public function setWidth(int $width): self
+  {
+    $this->width = $width;
+    return $this;
+  }
+  public function getHeight(): int
+  {
+    return $this->height;
+  }
+  public function setHeight(int $height): self
+  {
+    $this->height = $height;
     return $this;
   }
   public function getContentType(): string
@@ -79,6 +99,8 @@ class Image implements NormalizableInterface
       
       'id' => $this->getId(),
       'name' => $this->getName(),
+      'width' => $this->getWidth(),
+      'height' => $this->getHeight(),
       'contentType' => $this->getContentType(),
       'contentLength' => (int)$this->getContentLength(),
       'createdAt' => $normalizer->normalize($this->getCreatedAt(),$format,$context),
@@ -86,7 +108,7 @@ class Image implements NormalizableInterface
       'public' => (bool)$this->isPublic(),
       'user' => $normalizer->normalize($app['users']->find($this->getUserId()),$format,$context),
       
-      // URLs for image blobs
+      // Image URLs
       'imageUrl' => $app['url_generator']->generate('route.files.image',[
         'image' => $this->getId(),
         'format' => $app['mimetypes'][$this->getContentType()]
@@ -94,7 +116,7 @@ class Image implements NormalizableInterface
       'thumbnailUrl' => $app['url_generator']->generate('route.files.thumbnail',[
         'image' => $this->getId(),
         'width' => 150, 'height' => 150
-      ],UrlGenerator::ABSOLUTE_URL),
+      ],UrlGenerator::ABSOLUTE_URL)
     ];
   }
   
@@ -111,6 +133,8 @@ class Image implements NormalizableInterface
     return (new self)
       ->setId(self::createId())
       ->setName("")
+      ->setWidth(0)
+      ->setHeight(0)
       ->setContentType("application/x-zerosize")
       ->setContentLength(0)
       ->setCreatedAt(new DateTime)
