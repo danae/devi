@@ -109,6 +109,7 @@ class Image implements NormalizableInterface
       'user' => $normalizer->normalize($app['users']->find($this->getUserId()),$format,$context),
       
       // Image URLs
+      'format' => $app['mimetypes'][$this->getContentType()],
       'imageUrl' => $app['url_generator']->generate('route.files.image',[
         'image' => $this->getId(),
         'format' => $app['mimetypes'][$this->getContentType()]

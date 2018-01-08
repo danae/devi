@@ -15,9 +15,6 @@ interface UserRepositoryInterface
   // Get all users
   public function findAll(): array;
   
-  // Get all ids as an array
-  public function findAllIds(): array;
-  
   // Create a user in the repository
   public function create(User $user);
   

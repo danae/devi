@@ -85,14 +85,12 @@ class UserControllerProvider implements ControllerProviderInterface
     $this->validateCurrent($user,$request);
 
     // Replace the fields
-    if ($request->request->has('name'))
-      $user->setFileName($request->request->get('name'));
-    if ($request->request->has('email'))
+    if ($request->request->get('name') !== null)
+      $user->setName($request->request->get('name'));
+    if ($request->request->get('email') !== null)
       $user->setEmail($request->request->get('email'));
-    if ($request->request->has('password'))
+    if ($request->request->get('password') !== null)
       $user->setPassword($request->request->get('password'));
-    if ($request->request->has('public'))
-      $user->setPublic($request->request->get('public'));
 
     // Patch the updated user in the database
     $app['users']->update($user->setModifiedAt(new DateTime));

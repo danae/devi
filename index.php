@@ -9,6 +9,7 @@ use Devi\Provider\ImageControllerProvider;
 use Devi\Provider\UserControllerProvider;
 use Imagine\Gd\Imagine;
 use JDesrosiers\Silex\Provider\CorsServiceProvider;
+use Symfony\Component\Debug\ErrorHandler;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +20,7 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 // Register error handlers
-//ErrorHandler::register();
+ErrorHandler::register();
 
 // Create the application with the settings
 $app = new DeviApplication(require('settings.php'));

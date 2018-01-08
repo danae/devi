@@ -59,13 +59,6 @@ class UserRepository implements UserRepositoryInterface
     },$data);
   }
   
-  // Get all ids as an array
-  public function findAllIds(): array
-  {
-    $st = $this->database->query("SELECT name FROM {$this->table}");
-    return $st->fetchAll(PDO::FETCH_NUM);
-  }
-  
   // Create a user in the repository
   public function create(User $user)
   {

@@ -136,7 +136,7 @@ class ImageControllerProvider implements ControllerProviderInterface
   // Get all images of a user
   public function getAllByUser(Application $app, User $user)
   {
-    $images = $app['images']->findAllPublicByUser($user);
+    $images = $app['images']->findAllByUser($user);
     
     // Return the images
     $json = $app['json_serializer']->serialize($images,'json');

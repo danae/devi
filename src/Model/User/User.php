@@ -94,7 +94,9 @@ class User implements NormalizableInterface
     global $app;
     
     // Get already occupied names
-    $occupied = $app['users']->findAllIds();
+    $occupied = array_map(function($user) {
+      return $user->getName();
+    },$app['users']->findAll());
     if (in_array($name,$occupied))
       throw new PreconditionFailedHttpException('User name already in use');
     
