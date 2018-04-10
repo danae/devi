@@ -1,7 +1,7 @@
 <?php
 namespace Devi;
 
-use Devi\Database\Database;
+use Database\Database;
 use Devi\Model\Album\AlbumRepository;
 use Devi\Model\Image\ImageRepository;
 use Devi\Model\User\UserRepository;
