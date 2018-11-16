@@ -1,5 +1,5 @@
 {
-  "name": "devicloud/devi",
+  "name": "dengsn/devi",
   "description": "Image hosting backend for PHP",
   "authors": [
     {
@@ -11,18 +11,31 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "php": "^7.0",
-    "silex/silex": "^2.0",
-    "jdesrosiers/silex-cors-provider": "^1.0",
-    "dengsn/database-wrapper": "^0.1",
-    "symfony/serializer": "^3.3",
-    "symfony/property-access": "^3.3",
+    "php": "^7.2",
+    "ext-mongodb": "^1.5",
+    "mongodb/mongodb": "^1.4",
+    "slim/slim": "~3.0",
+    "php-di/php-di": "~6.0",
+    "php-di/slim-bridge": "~2.0",
+    "tuupola/slim-basic-auth": "~3.2",
+    "tuupola/cors-middleware": "^0.9",
+    "symfony/serializer": "~4.0",
+    "symfony/property-access": "~4.0",
     "league/flysystem": "^1.0",
     "imagine/imagine": "^0.5.0"
   },
+  "require-dev": {
+    "phpunit/phpunit": "~7.0",
+    "helmich/mongomock": "~2.1"
+  },
   "autoload": {
     "psr-4": {
-      "Devi\\": "src/"
+      "Dengsn\\Devi\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Dengsn\\Devi\\Tests\\": "tests/"
     }
   }
 }
